@@ -1,0 +1,162 @@
+// Package app wires the dependencies (store, sms client, auth manager,
+// templates) and exposes the HTTP handler. Handlers live in
+// internal/handlers/ as methods on *App.
+package app
+
+import (
+	"embed"
+	"errors"
+	"fmt"
+	"html/template"
+	"io/fs"
+	"net/http"
+	"strings"
+	"time"
+
+	"github.com/howarthTech/legion-rome-crm/internal/auth"
+	"github.com/howarthTech/legion-rome-crm/internal/sms"
+	"github.com/howarthTech/legion-rome-crm/internal/store"
+)
+
+// App holds everything handlers need.
+type App struct {
+	Store       *store.Store
+	Twilio      *sms.Client
+	Auth        *auth.Manager
+	Templates   *template.Template
+	StaticFS    http.Handler
+	PublicURL   string // canonical public URL (used for Twilio webhook signature verification)
+	OrgName     string // "American Legion Post 5" — used in SMS bodies and page chrome
+}
+
+// New builds an App. Caller is responsible for closing app.Store.
+func New(s *store.Store, t *sms.Client, a *auth.Manager, tplFS, staticFS embed.FS, publicURL, orgName string) (*App, error) {
+	tpl, err := loadTemplates(tplFS)
+	if err != nil {
+		return nil, fmt.Errorf("load templates: %w", err)
+	}
+	staticSub, err := fs.Sub(staticFS, "web/static")
+	if err != nil {
+		return nil, err
+	}
+	return &App{
+		Store:     s,
+		Twilio:    t,
+		Auth:      a,
+		Templates: tpl,
+		StaticFS:  http.FileServer(http.FS(staticSub)),
+		PublicURL: strings.TrimRight(publicURL, "/"),
+		OrgName:   orgName,
+	}, nil
+}
+
+func loadTemplates(tplFS embed.FS) (*template.Template, error) {
+	funcs := template.FuncMap{
+		"formatTime": func(t time.Time) string {
+			if t.IsZero() {
+				return ""
+			}
+			return t.Local().Format("Jan 2, 2006 · 3:04 PM")
+		},
+		"formatDate": func(t time.Time) string {
+			if t.IsZero() {
+				return ""
+			}
+			return t.Local().Format("Jan 2, 2006")
+		},
+		"badgeClass": func(status store.OptInStatus) string {
+			switch status {
+			case store.OptInConfirmed:
+				return "badge badge-ok"
+			case store.OptInPending:
+				return "badge badge-pending"
+			case store.OptInOptedOut:
+				return "badge badge-out"
+			default:
+				return "badge"
+			}
+		},
+		"statusLabel": func(status store.OptInStatus) string {
+			switch status {
+			case store.OptInConfirmed:
+				return "Opted in"
+			case store.OptInPending:
+				return "Awaiting consent"
+			case store.OptInOptedOut:
+				return "Opted out"
+			default:
+				return string(status)
+			}
+		},
+	}
+	t, err := template.New("").Funcs(funcs).ParseFS(tplFS,
+		"web/templates/layout.html",
+		"web/templates/login.html",
+		"web/templates/dashboard.html",
+		"web/templates/members_list.html",
+		"web/templates/members_new.html",
+		"web/templates/member_view.html",
+	)
+	if err != nil {
+		return nil, err
+	}
+	return t, nil
+}
+
+// Render writes a template wrapped in the base layout. `data` is merged with
+// the standard fields ({Title, User, FlashError, FlashOK, OrgName}) so every
+// template can rely on them.
+func (a *App) Render(w http.ResponseWriter, r *http.Request, name, title string, data map[string]any) {
+	if data == nil {
+		data = map[string]any{}
+	}
+	data["Title"] = title
+	data["OrgName"] = a.OrgName
+	if u, err := a.Auth.ParseSession(r); err == nil {
+		data["User"] = u
+	}
+	// Flash messages are passed in via query string (?ok=... or ?err=...).
+	// Keeps the implementation cookie-free; sufficient for this app's needs.
+	if e := r.URL.Query().Get("err"); e != "" {
+		data["FlashError"] = e
+	}
+	if ok := r.URL.Query().Get("ok"); ok != "" {
+		data["FlashOK"] = ok
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	if err := a.Templates.ExecuteTemplate(w, name, data); err != nil {
+		// Template execution is mid-response; we may already have started
+		// writing. Best effort: log and abandon.
+		fmt.Println("template error:", err)
+	}
+}
+
+// NormalizePhone takes a user-entered phone string and returns it in E.164
+// form (e.g. "+17065551234"). Strips spaces, dashes, parens, dots. Assumes
+// US country code if input has 10 digits. Returns error for anything else.
+func NormalizePhone(input string) (string, error) {
+	stripped := strings.Map(func(r rune) rune {
+		if r >= '0' && r <= '9' { return r }
+		if r == '+' { return r }
+		return -1
+	}, input)
+	if strings.HasPrefix(stripped, "+") {
+		// Already E.164-shaped. Require 11–15 digits after the plus.
+		digits := stripped[1:]
+		if len(digits) < 8 || len(digits) > 15 {
+			return "", errors.New("phone: international number must be 8–15 digits after +")
+		}
+		return stripped, nil
+	}
+	switch len(stripped) {
+	case 10:
+		return "+1" + stripped, nil
+	case 11:
+		if stripped[0] != '1' {
+			return "", errors.New("phone: 11-digit numbers must start with 1 (US country code)")
+		}
+		return "+" + stripped, nil
+	default:
+		return "", fmt.Errorf("phone: expected 10 digits (or +CC...); got %d", len(stripped))
+	}
+}

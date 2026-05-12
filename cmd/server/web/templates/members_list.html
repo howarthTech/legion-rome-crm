@@ -1,0 +1,41 @@
+{{define "members_list"}}{{template "layout" .}}{{end}}
+{{define "body"}}
+<header class="page-header page-header-row">
+  <div>
+    <h1>Members</h1>
+    <p class="muted">{{len .Members}} on the list.</p>
+  </div>
+  <div>
+    <a href="/members/new" class="btn btn-primary">Add a member</a>
+  </div>
+</header>
+
+{{if .Members}}
+<table class="table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Phone</th>
+      <th>Status</th>
+      <th>Added</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {{range .Members}}
+    <tr>
+      <td><a href="/members/{{.ID}}"><strong>{{.Name}}</strong></a></td>
+      <td><span class="mono">{{.Phone}}</span></td>
+      <td><span class="{{badgeClass .OptInStatus}}">{{statusLabel .OptInStatus}}</span></td>
+      <td><span class="muted">{{formatDate .CreatedAt}}</span></td>
+      <td><a href="/members/{{.ID}}">View →</a></td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+{{else}}
+<p class="empty-state">
+  No members on the list yet. <a href="/members/new">Add your first member</a>.
+</p>
+{{end}}
+{{end}}

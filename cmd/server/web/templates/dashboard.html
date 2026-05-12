@@ -1,0 +1,42 @@
+{{define "dashboard"}}{{template "layout" .}}{{end}}
+{{define "body"}}
+<header class="page-header">
+  <h1>Dashboard</h1>
+  <p class="muted">Welcome back. Here's the current state of the reminder list.</p>
+</header>
+
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-value">{{.Total}}</div>
+    <div class="stat-label">Members total</div>
+  </div>
+  <div class="stat-card stat-card-ok">
+    <div class="stat-value">{{.OptedIn}}</div>
+    <div class="stat-label">Opted in</div>
+  </div>
+  <div class="stat-card stat-card-pending">
+    <div class="stat-value">{{.Pending}}</div>
+    <div class="stat-label">Awaiting consent</div>
+  </div>
+  <div class="stat-card stat-card-out">
+    <div class="stat-value">{{.OptedOut}}</div>
+    <div class="stat-label">Opted out</div>
+  </div>
+</div>
+
+<div class="quick-actions">
+  <a href="/members" class="btn btn-secondary">View all members</a>
+  <a href="/members/new" class="btn btn-primary">Add a member</a>
+</div>
+
+<section class="tcpa-note">
+  <h2>Compliance reminder</h2>
+  <p>
+    Only members in the <strong>Opted in</strong> bucket should ever receive
+    event reminders. Members start as <em>awaiting consent</em> — they need
+    to reply YES to our automatic opt-in SMS before they're eligible for
+    any further messages. The reminder-send screen will skip non-opted-in
+    members automatically.
+  </p>
+</section>
+{{end}}

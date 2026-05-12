@@ -1,0 +1,36 @@
+{{define "layout"}}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{{.Title}} · {{.OrgName}} Admin</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body>
+  {{if .User}}
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a href="/" class="topbar-brand">{{.OrgName}} <span class="topbar-tag">Admin</span></a>
+      <nav class="topbar-nav">
+        <a href="/">Dashboard</a>
+        <a href="/members">Members</a>
+        <span class="topbar-user">Signed in as <strong>{{.User}}</strong></span>
+        <form method="POST" action="/logout" class="inline-form">
+          <button type="submit" class="link-button">Sign out</button>
+        </form>
+      </nav>
+    </div>
+  </header>
+  {{end}}
+
+  <main class="page">
+    <div class="container">
+      {{if .FlashOK}}<div class="flash flash-ok">{{.FlashOK}}</div>{{end}}
+      {{if .FlashError}}<div class="flash flash-error">{{.FlashError}}</div>{{end}}
+      {{template "body" .}}
+    </div>
+  </main>
+</body>
+</html>
+{{end}}

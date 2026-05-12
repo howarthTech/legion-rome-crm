@@ -1,0 +1,18 @@
+# Build output
+/bin/
+/data/
+
+# Local secrets — never commit. Production secrets live in
+# /srv/secrets/legion-rome-crm.env on the VPS per the OPS runbook.
+.env
+.env.local
+
+# OS / editor noise
+.DS_Store
+.idea/
+.vscode/
+*.swp
+*~
+
+# Logs
+*.log

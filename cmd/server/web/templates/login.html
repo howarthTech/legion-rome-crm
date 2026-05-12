@@ -1,0 +1,20 @@
+{{define "login"}}{{template "layout" .}}{{end}}
+{{define "body"}}
+<section class="auth-card">
+  <h1>{{.OrgName}} Admin</h1>
+  <p class="muted">Sign in to manage the SMS reminder list.</p>
+  {{if .Error}}<div class="flash flash-error">{{.Error}}</div>{{end}}
+  <form method="POST" action="/login" class="form">
+    {{if .Next}}<input type="hidden" name="next" value="{{.Next}}">{{end}}
+    <div class="form-field">
+      <label for="login-username">Username</label>
+      <input id="login-username" name="username" type="text" autocomplete="username" required autofocus>
+    </div>
+    <div class="form-field">
+      <label for="login-password">Password</label>
+      <input id="login-password" name="password" type="password" autocomplete="current-password" required>
+    </div>
+    <button type="submit" class="btn btn-primary">Sign in</button>
+  </form>
+</section>
+{{end}}

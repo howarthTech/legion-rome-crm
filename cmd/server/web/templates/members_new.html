@@ -1,0 +1,47 @@
+{{define "members_new"}}{{template "layout" .}}{{end}}
+{{define "body"}}
+<header class="page-header">
+  <p class="breadcrumb"><a href="/members">← Members</a></p>
+  <h1>Add a member</h1>
+  <p class="muted">
+    They'll receive an SMS asking them to reply YES to confirm. Until they
+    confirm, they're <em>awaiting consent</em> and won't get reminders.
+  </p>
+</header>
+
+{{if .Error}}<div class="flash flash-error">{{.Error}}</div>{{end}}
+
+<form method="POST" action="/members" class="form">
+  <div class="form-field">
+    <label for="name">Full name <span class="required">*</span></label>
+    <input id="name" name="name" type="text" required value="{{.FormName}}" autofocus>
+  </div>
+
+  <div class="form-field">
+    <label for="phone">Phone number <span class="required">*</span></label>
+    <input id="phone" name="phone" type="tel" required
+           placeholder="(706) 555-1234"
+           autocomplete="tel"
+           value="{{.FormPhone}}">
+    <p class="form-help">
+      US numbers OK as 10 digits (we'll add the +1). International numbers
+      need the leading + and country code.
+    </p>
+  </div>
+
+  <div class="form-field">
+    <label for="email">Email <span class="muted">(optional)</span></label>
+    <input id="email" name="email" type="email" autocomplete="email" value="{{.FormEmail}}">
+  </div>
+
+  <div class="form-field">
+    <label for="notes">Notes <span class="muted">(optional, admin-only)</span></label>
+    <textarea id="notes" name="notes" rows="3">{{.FormNotes}}</textarea>
+  </div>
+
+  <div class="form-actions">
+    <a href="/members" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary">Add member &amp; send opt-in SMS</button>
+  </div>
+</form>
+{{end}}

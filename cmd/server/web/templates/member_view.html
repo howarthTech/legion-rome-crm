@@ -1,0 +1,80 @@
+{{define "member_view"}}{{template "layout" .}}{{end}}
+{{define "body"}}
+{{with .Member}}
+<header class="page-header page-header-row">
+  <div>
+    <p class="breadcrumb"><a href="/members">← Members</a></p>
+    <h1>{{.Name}}</h1>
+    <p class="muted">
+      <span class="mono">{{.Phone}}</span>
+      {{if .Email}} · <a href="mailto:{{.Email}}">{{.Email}}</a>{{end}}
+    </p>
+  </div>
+  <div>
+    <span class="{{badgeClass .OptInStatus}}">{{statusLabel .OptInStatus}}</span>
+  </div>
+</header>
+
+<dl class="dl-grid">
+  <dt>Added</dt>
+  <dd>{{formatTime .CreatedAt}}</dd>
+
+  <dt>Opt-in requested</dt>
+  <dd>{{formatTime .OptInRequestedAt}}</dd>
+
+  {{if .OptInConfirmedAt.Valid}}
+  <dt>Opt-in confirmed</dt>
+  <dd>{{formatTime .OptInConfirmedAt.Time}}</dd>
+  {{end}}
+
+  {{if .OptOutAt.Valid}}
+  <dt>Opted out</dt>
+  <dd>{{formatTime .OptOutAt.Time}}</dd>
+  {{end}}
+
+  {{if .Notes}}
+  <dt>Notes</dt>
+  <dd>{{.Notes}}</dd>
+  {{end}}
+</dl>
+
+<div class="action-row">
+  {{if eq (printf "%v" .OptInStatus) "PENDING"}}
+  <form method="POST" action="/members/{{.ID}}/resend-opt-in" class="inline-form">
+    <button type="submit" class="btn btn-secondary">Resend opt-in SMS</button>
+  </form>
+  {{end}}
+  {{if not (eq (printf "%v" .OptInStatus) "OPTED_OUT")}}
+  <form method="POST" action="/members/{{.ID}}/opt-out" class="inline-form"
+        onsubmit="return confirm('Mark this member as opted out? They will no longer receive any messages.');">
+    <button type="submit" class="btn btn-danger-secondary">Mark opted out</button>
+  </form>
+  {{end}}
+  <form method="POST" action="/members/{{.ID}}/delete" class="inline-form"
+        onsubmit="return confirm('Permanently delete this member? Their message history will remain in the log.');">
+    <button type="submit" class="btn btn-danger-secondary">Delete</button>
+  </form>
+</div>
+
+<section class="messages-section">
+  <h2>Message history</h2>
+  {{if $.Messages}}
+  <ol class="messages">
+    {{range $.Messages}}
+    <li class="message message-{{.Direction}}">
+      <div class="message-meta">
+        <span class="message-direction">{{if eq (printf "%v" .Direction) "OUTBOUND"}}↑ Sent{{else}}↓ Received{{end}}</span>
+        <time>{{formatTime .CreatedAt}}</time>
+        {{if .Status}} · <span class="muted">{{.Status}}</span>{{end}}
+      </div>
+      <div class="message-body">{{.Body}}</div>
+      {{if .ErrorMsg}}<div class="message-error">Error: {{.ErrorMsg}}</div>{{end}}
+    </li>
+    {{end}}
+  </ol>
+  {{else}}
+  <p class="empty-state muted">No messages yet for this member.</p>
+  {{end}}
+</section>
+{{end}}
+{{end}}
