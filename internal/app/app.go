@@ -14,39 +14,58 @@ import (
 	"time"
 
 	"github.com/howarthTech/legion-rome-crm/internal/auth"
+	"github.com/howarthTech/legion-rome-crm/internal/events"
 	"github.com/howarthTech/legion-rome-crm/internal/sms"
 	"github.com/howarthTech/legion-rome-crm/internal/store"
 )
 
 // App holds everything handlers need.
 type App struct {
-	Store       *store.Store
-	Twilio      *sms.Client
-	Auth        *auth.Manager
-	Templates   *template.Template
-	StaticFS    http.Handler
-	PublicURL   string // canonical public URL (used for Twilio webhook signature verification)
-	OrgName     string // "American Legion Post 5" — used in SMS bodies and page chrome
+	Store      *store.Store
+	Twilio     *sms.Client
+	Auth       *auth.Manager
+	Events     *events.Client
+	Quiet      *events.QuietHours
+	Templates  *template.Template
+	StaticFS   http.Handler
+	PublicURL  string // canonical public URL (used for Twilio webhook signature verification)
+	OrgName    string // post name — used in SMS bodies and page chrome
 }
 
-// New builds an App. Caller is responsible for closing app.Store.
-func New(s *store.Store, t *sms.Client, a *auth.Manager, tplFS, staticFS embed.FS, publicURL, orgName string) (*App, error) {
-	tpl, err := loadTemplates(tplFS)
+// Deps bundles the App's dependencies so New doesn't grow an unwieldy
+// positional signature as the app gains features.
+type Deps struct {
+	Store     *store.Store
+	Twilio    *sms.Client
+	Auth      *auth.Manager
+	Events    *events.Client
+	Quiet     *events.QuietHours
+	TplFS     embed.FS
+	StaticFS  embed.FS
+	PublicURL string
+	OrgName   string
+}
+
+// New builds an App. Caller is responsible for closing d.Store.
+func New(d Deps) (*App, error) {
+	tpl, err := loadTemplates(d.TplFS)
 	if err != nil {
 		return nil, fmt.Errorf("load templates: %w", err)
 	}
-	staticSub, err := fs.Sub(staticFS, "web/static")
+	staticSub, err := fs.Sub(d.StaticFS, "web/static")
 	if err != nil {
 		return nil, err
 	}
 	return &App{
-		Store:     s,
-		Twilio:    t,
-		Auth:      a,
+		Store:     d.Store,
+		Twilio:    d.Twilio,
+		Auth:      d.Auth,
+		Events:    d.Events,
+		Quiet:     d.Quiet,
 		Templates: tpl,
 		StaticFS:  http.FileServer(http.FS(staticSub)),
-		PublicURL: strings.TrimRight(publicURL, "/"),
-		OrgName:   orgName,
+		PublicURL: strings.TrimRight(d.PublicURL, "/"),
+		OrgName:   d.OrgName,
 	}, nil
 }
 
@@ -96,6 +115,7 @@ func loadTemplates(tplFS embed.FS) (*template.Template, error) {
 		"web/templates/members_list.html",
 		"web/templates/members_new.html",
 		"web/templates/member_view.html",
+		"web/templates/reminders.html",
 	)
 	if err != nil {
 		return nil, err

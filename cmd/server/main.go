@@ -23,6 +23,7 @@ import (
 
 	"github.com/howarthTech/legion-rome-crm/internal/app"
 	"github.com/howarthTech/legion-rome-crm/internal/auth"
+	"github.com/howarthTech/legion-rome-crm/internal/events"
 	"github.com/howarthTech/legion-rome-crm/internal/handlers"
 	"github.com/howarthTech/legion-rome-crm/internal/sms"
 	"github.com/howarthTech/legion-rome-crm/internal/store"
@@ -64,8 +65,25 @@ func main() {
 		log.Fatalf("auth: %v", err)
 	}
 
+	// --- Events feed + quiet hours --------------------------------------
+	eventsClient := events.NewClient(cfg.EventsFeedURL)
+	if !eventsClient.Configured() {
+		log.Println("ℹ EVENTS_FEED_URL not set — the reminder screen will be unavailable until it is.")
+	}
+	quiet := events.NewQuietHours(cfg.OrgTimezone)
+
 	// --- App + routes ----------------------------------------------------
-	a, err := app.New(st, twilio, authMgr, templatesFS, staticFS, cfg.PublicURL, cfg.OrgName)
+	a, err := app.New(app.Deps{
+		Store:     st,
+		Twilio:    twilio,
+		Auth:      authMgr,
+		Events:    eventsClient,
+		Quiet:     quiet,
+		TplFS:     templatesFS,
+		StaticFS:  staticFS,
+		PublicURL: cfg.PublicURL,
+		OrgName:   cfg.OrgName,
+	})
 	if err != nil {
 		log.Fatalf("app: %v", err)
 	}
@@ -90,6 +108,8 @@ func main() {
 	mux.HandleFunc("POST /members/{id}/resend-opt-in", authMgr.RequireAuth(handlers.MembersResendOptIn(a)))
 	mux.HandleFunc("POST /members/{id}/opt-out", authMgr.RequireAuth(handlers.MembersOptOut(a)))
 	mux.HandleFunc("POST /members/{id}/delete", authMgr.RequireAuth(handlers.MembersDelete(a)))
+	mux.HandleFunc("GET /reminders", authMgr.RequireAuth(handlers.RemindersGet(a)))
+	mux.HandleFunc("POST /reminders/send", authMgr.RequireAuth(handlers.RemindersSend(a)))
 
 	// Healthcheck for the deploy script's polling
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
@@ -144,6 +164,8 @@ type config struct {
 	DBPath            string
 	PublicURL         string
 	OrgName           string
+	OrgTimezone       string
+	EventsFeedURL     string
 	AdminUsername     string
 	AdminPasswordHash string
 	SessionSecret     string
@@ -158,6 +180,8 @@ func loadConfig() config {
 		DBPath:            envOr("DB_PATH", "./data/crm.db"),
 		PublicURL:         envOr("PUBLIC_URL", "http://localhost:8081"),
 		OrgName:           os.Getenv("ORG_NAME"),
+		OrgTimezone:       envOr("ORG_TIMEZONE", "America/New_York"),
+		EventsFeedURL:     os.Getenv("EVENTS_FEED_URL"),
 		AdminUsername:     os.Getenv("ADMIN_USERNAME"),
 		AdminPasswordHash: os.Getenv("ADMIN_PASSWORD_HASH"),
 		SessionSecret:     os.Getenv("SESSION_SECRET"),

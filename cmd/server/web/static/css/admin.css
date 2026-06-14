@@ -287,3 +287,23 @@ hr { border: 0; border-top: 1px solid var(--rule); margin: 2rem 0; }
   padding: 2rem;
   text-align: center;
 }
+
+/* ---------- Reminders ---------- */
+.reminder-events { border: 0; padding: 0; margin: 0 0 1rem; display: grid; gap: 0.5rem; }
+.reminder-events legend { margin-bottom: 0.5rem; }
+.reminder-event {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem;
+  background: #fff;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.reminder-event:hover { border-color: var(--navy); }
+.reminder-event input { margin-top: 0.2rem; }
+.reminder-event-body { display: flex; flex-direction: column; }
+.reminder-event-title { font-weight: 600; color: var(--navy); }
+.reminder-event-meta { font-size: 0.8125rem; color: var(--muted); }
+.btn[disabled] { opacity: 0.5; cursor: not-allowed; }
