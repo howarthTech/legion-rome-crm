@@ -164,10 +164,36 @@ What's **not** implemented yet but should be before any real launch:
 
 ---
 
+## Multi-tenant: one image, many posts
+
+This is the **shared CRM image** for the Legion Post Platform (see
+[plan.md](https://github.com/howarthTech/legion-rome/blob/main/plan.md)). The
+same binary/image runs every client; a tenant is entirely defined by its
+environment + its SQLite volume. There is no per-client code and no
+`tenant_id` — each post runs an isolated container with its own DB.
+
+### Per-client env contract
+
+Everything that differs between posts comes from these variables (full
+reference in [`.env.example`](./.env.example)):
+
+| Variable | Required | Per-client value |
+|---|---|---|
+| `ORG_NAME` | **yes** | The post's name — appears in every SMS body + page chrome. No default; startup aborts if unset (so one post's messages can't be branded with another's name). |
+| `PUBLIC_URL` | yes | `https://admin.<post-domain>` — also used to verify Twilio webhook signatures. |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD_HASH` | yes | That post's admin login. |
+| `SESSION_SECRET` | yes | Random ≥32 chars, unique per client. |
+| `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM_NUMBER` | for real sends | That post's Twilio subaccount + number. Empty → dry-run mode. |
+| `DB_PATH` | no (default `./data/crm.db`) | Points at that client's mounted volume. |
+| `LISTEN_ADDR` | no (default `127.0.0.1:8081`) | The client's allocated loopback port. |
+
+Provisioning a new post = generate this env file + a named volume + a Caddy
+route; no rebuild.
+
 ## Production deployment (not yet enabled)
 
 Per the [OPS hosting-pattern runbook](https://github.com/howarthTech/legion-rome/blob/main/runbooks/hosting-pattern.md),
-this is a separate tenant from romelegion.org:
+each post is a separate tenant:
 
 - `/srv/apps/legion-rome-crm/` on the VPS
 - New compose file (Go container + named-volume SQLite)

@@ -1,4 +1,9 @@
-// Post 5 CRM — admin tool for managing the SMS reminder list.
+// Legion Post CRM — admin tool for managing a post's SMS reminder list.
+//
+// One binary / one Docker image serves any post. All per-client values
+// (org name, admin credentials, Twilio creds, DB path, public URL) come from
+// environment variables, so the same image runs every tenant — see the
+// per-client env contract in .env.example and README.md.
 //
 // Wires the store, Twilio client, and auth manager into an http.ServeMux,
 // then serves on $PORT. Config comes from environment variables; see
@@ -31,6 +36,14 @@ var staticFS embed.FS
 
 func main() {
 	cfg := loadConfig()
+
+	// ORG_NAME is per-client and appears in every SMS body + page chrome.
+	// It is REQUIRED — there is no safe default for a shared image that serves
+	// multiple posts. A missing ORG_NAME must fail fast rather than risk
+	// branding one post's messages with another post's (or a placeholder) name.
+	if cfg.OrgName == "" {
+		log.Fatal("config: ORG_NAME is required (the post's name, e.g. \"American Legion Post 5\")")
+	}
 
 	// --- Store -----------------------------------------------------------
 	st, err := store.Open(cfg.DBPath)
@@ -144,7 +157,7 @@ func loadConfig() config {
 		Listen:            envOr("LISTEN_ADDR", "127.0.0.1:8081"),
 		DBPath:            envOr("DB_PATH", "./data/crm.db"),
 		PublicURL:         envOr("PUBLIC_URL", "http://localhost:8081"),
-		OrgName:           envOr("ORG_NAME", "American Legion Post 5"),
+		OrgName:           os.Getenv("ORG_NAME"),
 		AdminUsername:     os.Getenv("ADMIN_USERNAME"),
 		AdminPasswordHash: os.Getenv("ADMIN_PASSWORD_HASH"),
 		SessionSecret:     os.Getenv("SESSION_SECRET"),
