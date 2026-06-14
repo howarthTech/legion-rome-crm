@@ -13,6 +13,11 @@ build: ## Compile bin/server
 	@$(GO) build -o bin/server ./cmd/server
 	@echo "✓ Built bin/server ($$(du -h bin/server | awk '{print $$1}'))"
 
+.PHONY: docker-build
+docker-build: ## Build the container image (legion-rome-crm:dev)
+	@docker build -t legion-rome-crm:dev .
+	@echo "✓ Built legion-rome-crm:dev ($$(docker images legion-rome-crm:dev --format '{{.Size}}'))"
+
 .PHONY: run
 run: build ## Build and run with .env loaded
 	@if [ ! -f .env ]; then echo "❌ .env missing. cp .env.example .env first." && exit 1; fi

@@ -185,25 +185,55 @@ reference in [`.env.example`](./.env.example)):
 | `SESSION_SECRET` | yes | Random ≥32 chars, unique per client. |
 | `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM_NUMBER` | for real sends | That post's Twilio subaccount + number. Empty → dry-run mode. |
 | `DB_PATH` | no (default `./data/crm.db`) | Points at that client's mounted volume. |
-| `LISTEN_ADDR` | no (default `127.0.0.1:8081`) | The client's allocated loopback port. |
+| `EVENTS_FEED_URL` | for reminders | The site's `/events/events.json`. Empty → reminder screen unavailable. |
+| `ORG_TIMEZONE` | no (default `America/New_York`) | Post timezone for the SMS quiet-hours guard. |
+| `LISTEN_ADDR` | no | Local runs default `127.0.0.1:8081`; the **container image** defaults `0.0.0.0:8081` (don't override in a client env file). |
 
 Provisioning a new post = generate this env file + a named volume + a Caddy
 route; no rebuild.
 
-## Production deployment (not yet enabled)
+## Container image
+
+The shared image is published to **`ghcr.io/howarthtech/legion-rome-crm`** by
+[`.github/workflows/publish.yml`](./.github/workflows/publish.yml) on every
+push to `main` (tagged `latest` + `sha-<short>`; git tags publish `vX.Y.Z`).
+
+```bash
+# Build locally
+docker build -t legion-rome-crm .
+
+# Run a client instance: host port 8082 -> internal 8081, named volume for DB
+docker run -d --name crm-post-x \
+  --env-file /srv/secrets/crm-post-x.env \
+  -p 127.0.0.1:8082:8081 \
+  -v crm-post-x-data:/data \
+  ghcr.io/howarthtech/legion-rome-crm:latest
+```
+
+The image always listens on `0.0.0.0:8081` inside the container; the host
+restricts exposure by publishing to `127.0.0.1:<client-port>:8081`, and Caddy
+reverse-proxies `admin.<domain>` to that host port. Runs as a non-root user
+(uid 10001); the SQLite DB lives on the mounted `/data` volume. ~38 MB.
+
+The provisioner ([legion-post-platform](https://github.com/howarthTech/legion-post-platform))
+generates the per-client `docker-compose.snippet.yml` + env file that wire all
+of this up.
+
+## Production deployment
 
 Per the [OPS hosting-pattern runbook](https://github.com/howarthTech/legion-rome/blob/main/runbooks/hosting-pattern.md),
 each post is a separate tenant:
 
-- `/srv/apps/legion-rome-crm/` on the VPS
-- New compose file (Go container + named-volume SQLite)
-- Resource budget (TBD with OPS — likely well under 100 MB RAM)
-- Caddy site block routing `admin.romelegion.org` → `127.0.0.1:8081`
-- Secrets at `/srv/secrets/legion-rome-crm.env` (mode 600, root-owned)
-- Backup drop-in tars the SQLite file nightly
+- Its own container from the shared image under `/srv/apps/crm-<client>/`
+- Named-volume SQLite (`crm-<client>-data:/data`)
+- Resource budget: `0.25` CPU / `128m` (set in the generated compose)
+- Caddy block routing `admin.<domain>` → its published loopback port
+- Secrets at `/srv/secrets/crm-<client>.env` (mode 600, root-owned)
+- Backup drop-in tars the named volume nightly
 
-A Dockerfile, compose file, and Caddy block will land in a future commit
-once we're ready to deploy. The current goal is local-only iteration.
+**Remaining before first real deploy:** set the GHCR package to Public (or give
+the VPS a read PAT), and have the OPS conversation about the multi-tenant
+budget.
 
 ---
 
