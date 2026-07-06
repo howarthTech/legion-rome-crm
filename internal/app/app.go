@@ -26,7 +26,7 @@ type App struct {
 	Auth       *auth.Manager
 	Events     *events.Client
 	Quiet      *events.QuietHours
-	Templates  *template.Template
+	Templates  map[string]*template.Template // one set per page: layout + that page
 	StaticFS   http.Handler
 	PublicURL  string // canonical public URL (used for Twilio webhook signature verification)
 	OrgName    string // post name — used in SMS bodies and page chrome
@@ -40,7 +40,7 @@ type Deps struct {
 	Auth      *auth.Manager
 	Events    *events.Client
 	Quiet     *events.QuietHours
-	TplFS     embed.FS
+	TplFS     fs.FS
 	StaticFS  embed.FS
 	PublicURL string
 	OrgName   string
@@ -69,7 +69,17 @@ func New(d Deps) (*App, error) {
 	}, nil
 }
 
-func loadTemplates(tplFS embed.FS) (*template.Template, error) {
+// pageNames are the page templates under web/templates/. Each page is parsed
+// into its OWN template set together with the layout. Parsing them all into
+// one shared set is a bug: every page defines a block named "body", and in a
+// single set the last file parsed silently overwrites all the others — every
+// page then renders the final file's body (this shipped once; see
+// TestPagesRenderTheirOwnBody).
+var pageNames = []string{
+	"login", "dashboard", "members_list", "members_new", "member_view", "reminders",
+}
+
+func loadTemplates(tplFS fs.FS) (map[string]*template.Template, error) {
 	funcs := template.FuncMap{
 		"formatTime": func(t time.Time) string {
 			if t.IsZero() {
@@ -108,19 +118,18 @@ func loadTemplates(tplFS embed.FS) (*template.Template, error) {
 			}
 		},
 	}
-	t, err := template.New("").Funcs(funcs).ParseFS(tplFS,
-		"web/templates/layout.html",
-		"web/templates/login.html",
-		"web/templates/dashboard.html",
-		"web/templates/members_list.html",
-		"web/templates/members_new.html",
-		"web/templates/member_view.html",
-		"web/templates/reminders.html",
-	)
-	if err != nil {
-		return nil, err
+	sets := make(map[string]*template.Template, len(pageNames))
+	for _, page := range pageNames {
+		t, err := template.New(page).Funcs(funcs).ParseFS(tplFS,
+			"web/templates/layout.html",
+			"web/templates/"+page+".html",
+		)
+		if err != nil {
+			return nil, fmt.Errorf("parse %s: %w", page, err)
+		}
+		sets[page] = t
 	}
-	return t, nil
+	return sets, nil
 }
 
 // Render writes a template wrapped in the base layout. `data` is merged with
@@ -143,8 +152,14 @@ func (a *App) Render(w http.ResponseWriter, r *http.Request, name, title string,
 	if ok := r.URL.Query().Get("ok"); ok != "" {
 		data["FlashOK"] = ok
 	}
+	tpl, ok := a.Templates[name]
+	if !ok {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		fmt.Println("template error: no such page template:", name)
+		return
+	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := a.Templates.ExecuteTemplate(w, name, data); err != nil {
+	if err := tpl.ExecuteTemplate(w, name, data); err != nil {
 		// Template execution is mid-response; we may already have started
 		// writing. Best effort: log and abandon.
 		fmt.Println("template error:", err)
