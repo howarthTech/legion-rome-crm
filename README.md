@@ -42,11 +42,10 @@ this is a small Go web app.
 - Only `OPTED_IN` members are eligible for event reminders.
 - Every SMS (in and out) is audit-logged per member.
 
-**Not yet built** (next milestone): the event-reminder send screen itself.
-The current code only manages the member list and opt-in flow. Reminder
-sending will hook into the [romelegion.org events JSON feed](https://github.com/howarthTech/legion-rome)
-(which doesn't exist yet either) and let the admin send to all opted-in
-members for a chosen event.
+- The **event-reminder send screen** (`/reminders`) reads the site's
+  [events JSON feed](https://github.com/howarthTech/legion-rome) and sends a
+  reminder to every `OPTED_IN` member for a chosen event — guarded by quiet
+  hours (9 AM–9 PM in `ORG_TIMEZONE`) and audit-logged like everything else.
 
 ---
 
@@ -155,9 +154,11 @@ this app. The choices that satisfy it:
 5. **Audit trail.** Every inbound and outbound SMS is logged in
    `messages_log` so consent capture can be demonstrated if challenged.
 
+6. **Quiet hours.** Reminders only send between 9 AM and 9 PM in the post's
+   timezone (`ORG_TIMEZONE`) — see [`internal/events/quiethours.go`](./internal/events/quiethours.go).
+
 What's **not** implemented yet but should be before any real launch:
 
-- A "Quiet hours" check (no SMS between, say, 9 PM and 9 AM local time).
 - Per-member consent capture timestamps surfaced in the UI (we record them
   in the DB but don't yet show them prominently).
 - A re-confirmation flow if a member doesn't reply within 24 hours.
