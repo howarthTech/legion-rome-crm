@@ -24,6 +24,10 @@ func NewQuietHours(tz string) *QuietHours {
 	return &QuietHours{loc: loc, startHour: 9, endHour: 21}
 }
 
+// Location exposes the post's timezone (used by the event form to interpret
+// the admin's local date/time input).
+func (q *QuietHours) Location() *time.Location { return q.loc }
+
 // Allowed reports whether sending is permitted at instant t.
 func (q *QuietHours) Allowed(t time.Time) bool {
 	h := t.In(q.loc).Hour()

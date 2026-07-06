@@ -25,6 +25,7 @@ import (
 	"github.com/howarthTech/legion-rome-crm/internal/auth"
 	"github.com/howarthTech/legion-rome-crm/internal/events"
 	"github.com/howarthTech/legion-rome-crm/internal/handlers"
+	"github.com/howarthTech/legion-rome-crm/internal/rebuild"
 	"github.com/howarthTech/legion-rome-crm/internal/sms"
 	"github.com/howarthTech/legion-rome-crm/internal/store"
 )
@@ -65,20 +66,20 @@ func main() {
 		log.Fatalf("auth: %v", err)
 	}
 
-	// --- Events feed + quiet hours --------------------------------------
-	eventsClient := events.NewClient(cfg.EventsFeedURL)
-	if !eventsClient.Configured() {
-		log.Println("ℹ EVENTS_FEED_URL not set — the reminder screen will be unavailable until it is.")
-	}
+	// --- Quiet hours + site-rebuild notifier ------------------------------
 	quiet := events.NewQuietHours(cfg.OrgTimezone)
+	rebuilder := rebuild.New(cfg.GitHubDispatchToken, cfg.GitHubDispatchRepo)
+	if !rebuilder.Enabled() {
+		log.Println("ℹ GITHUB_DISPATCH_TOKEN/REPO not set — event changes reach the site on its next scheduled build instead of immediately.")
+	}
 
 	// --- App + routes ----------------------------------------------------
 	a, err := app.New(app.Deps{
 		Store:     st,
 		Twilio:    twilio,
 		Auth:      authMgr,
-		Events:    eventsClient,
 		Quiet:     quiet,
+		Rebuild:   rebuilder,
 		TplFS:     templatesFS,
 		StaticFS:  staticFS,
 		PublicURL: cfg.PublicURL,
@@ -110,6 +111,16 @@ func main() {
 	mux.HandleFunc("POST /members/{id}/delete", authMgr.RequireAuth(handlers.MembersDelete(a)))
 	mux.HandleFunc("GET /reminders", authMgr.RequireAuth(handlers.RemindersGet(a)))
 	mux.HandleFunc("POST /reminders/send", authMgr.RequireAuth(handlers.RemindersSend(a)))
+	mux.HandleFunc("GET /events", authMgr.RequireAuth(handlers.EventsList(a)))
+	mux.HandleFunc("GET /events/new", authMgr.RequireAuth(handlers.EventsNewGet(a)))
+	mux.HandleFunc("POST /events", authMgr.RequireAuth(handlers.EventsCreate(a)))
+	mux.HandleFunc("GET /events/{id}/edit", authMgr.RequireAuth(handlers.EventsEditGet(a)))
+	mux.HandleFunc("POST /events/{id}", authMgr.RequireAuth(handlers.EventsUpdate(a)))
+	mux.HandleFunc("POST /events/{id}/delete", authMgr.RequireAuth(handlers.EventsDelete(a)))
+
+	// Public read-only feed: the website builds its event pages from this.
+	// Everything in it is already public on the site; no auth by design.
+	mux.HandleFunc("GET /api/events.json", handlers.EventsAPI(a))
 
 	// Healthcheck for the deploy script's polling
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
@@ -160,18 +171,19 @@ func securityHeaders(h http.Handler) http.Handler {
 // --- Config -----------------------------------------------------------------
 
 type config struct {
-	Listen            string
-	DBPath            string
-	PublicURL         string
-	OrgName           string
-	OrgTimezone       string
-	EventsFeedURL     string
-	AdminUsername     string
-	AdminPasswordHash string
-	SessionSecret     string
-	TwilioAccountSID  string
-	TwilioAuthToken   string
-	TwilioFromNumber  string
+	Listen              string
+	DBPath              string
+	PublicURL           string
+	OrgName             string
+	OrgTimezone         string
+	AdminUsername       string
+	AdminPasswordHash   string
+	SessionSecret       string
+	TwilioAccountSID    string
+	TwilioAuthToken     string
+	TwilioFromNumber    string
+	GitHubDispatchToken string
+	GitHubDispatchRepo  string
 }
 
 func loadConfig() config {
@@ -179,15 +191,16 @@ func loadConfig() config {
 		Listen:            envOr("LISTEN_ADDR", "127.0.0.1:8081"),
 		DBPath:            envOr("DB_PATH", "./data/crm.db"),
 		PublicURL:         envOr("PUBLIC_URL", "http://localhost:8081"),
-		OrgName:           os.Getenv("ORG_NAME"),
-		OrgTimezone:       envOr("ORG_TIMEZONE", "America/New_York"),
-		EventsFeedURL:     os.Getenv("EVENTS_FEED_URL"),
-		AdminUsername:     os.Getenv("ADMIN_USERNAME"),
-		AdminPasswordHash: os.Getenv("ADMIN_PASSWORD_HASH"),
-		SessionSecret:     os.Getenv("SESSION_SECRET"),
-		TwilioAccountSID:  os.Getenv("TWILIO_ACCOUNT_SID"),
-		TwilioAuthToken:   os.Getenv("TWILIO_AUTH_TOKEN"),
-		TwilioFromNumber:  os.Getenv("TWILIO_FROM_NUMBER"),
+		OrgName:             os.Getenv("ORG_NAME"),
+		OrgTimezone:         envOr("ORG_TIMEZONE", "America/New_York"),
+		AdminUsername:       os.Getenv("ADMIN_USERNAME"),
+		AdminPasswordHash:   os.Getenv("ADMIN_PASSWORD_HASH"),
+		SessionSecret:       os.Getenv("SESSION_SECRET"),
+		TwilioAccountSID:    os.Getenv("TWILIO_ACCOUNT_SID"),
+		TwilioAuthToken:     os.Getenv("TWILIO_AUTH_TOKEN"),
+		TwilioFromNumber:    os.Getenv("TWILIO_FROM_NUMBER"),
+		GitHubDispatchToken: os.Getenv("GITHUB_DISPATCH_TOKEN"),
+		GitHubDispatchRepo:  os.Getenv("GITHUB_DISPATCH_REPO"),
 	}
 	return c
 }

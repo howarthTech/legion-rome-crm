@@ -1,0 +1,64 @@
+{{define "events_list"}}{{template "layout" .}}{{end}}
+{{define "body"}}
+<header class="page-header">
+  <h1>Events</h1>
+  <p class="muted">
+    Events added here appear on the post's public website and in the
+    <a href="/reminders">Send reminder</a> screen. The website rebuilds
+    automatically after changes.
+  </p>
+  <p><a href="/events/new" class="btn btn-primary">Add an event</a></p>
+</header>
+
+{{if .Upcoming}}
+<h2>Upcoming</h2>
+<table class="table">
+  <thead>
+    <tr><th>Event</th><th>When</th><th>Location</th><th></th></tr>
+  </thead>
+  <tbody>
+    {{range .Upcoming}}
+    <tr>
+      <td><strong>{{.Title}}</strong></td>
+      <td>{{.StartsAt.Format "Mon, Jan 2, 2006 · 3:04 PM"}}</td>
+      <td>{{.Location}}</td>
+      <td class="table-actions">
+        <a href="/events/{{.ID}}/edit" class="btn btn-secondary btn-sm">Edit</a>
+        <form method="POST" action="/events/{{.ID}}/delete" class="inline-form"
+              onsubmit="return confirm('Delete “{{.Title}}”? It will be removed from the website too.');">
+          <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+{{else}}
+<p class="empty-state muted">No upcoming events. Add one and it appears on the website and the reminder screen.</p>
+{{end}}
+
+{{if .Past}}
+<h2>Past</h2>
+<table class="table">
+  <thead>
+    <tr><th>Event</th><th>When</th><th>Location</th><th></th></tr>
+  </thead>
+  <tbody>
+    {{range .Past}}
+    <tr>
+      <td>{{.Title}}</td>
+      <td>{{.StartsAt.Format "Mon, Jan 2, 2006 · 3:04 PM"}}</td>
+      <td>{{.Location}}</td>
+      <td class="table-actions">
+        <a href="/events/{{.ID}}/edit" class="btn btn-secondary btn-sm">Edit</a>
+        <form method="POST" action="/events/{{.ID}}/delete" class="inline-form"
+              onsubmit="return confirm('Delete “{{.Title}}”? Past events stay visible on the website’s events page until deleted.');">
+          <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+{{end}}
+{{end}}

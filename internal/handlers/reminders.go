@@ -8,20 +8,19 @@ import (
 	"time"
 
 	"github.com/howarthTech/legion-rome-crm/internal/app"
-	"github.com/howarthTech/legion-rome-crm/internal/events"
+	"github.com/howarthTech/legion-rome-crm/internal/store"
 )
 
-// RemindersGet shows the send-reminder screen: upcoming events from the site
-// feed, the opted-in member count, and the quiet-hours status.
+// RemindersGet shows the send-reminder screen: upcoming events (authored in
+// this CRM), the opted-in member count, and the quiet-hours status.
 func RemindersGet(a *app.App) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		now := time.Now()
 
 		data := map[string]any{
-			"FeedConfigured": a.Events.Configured(),
-			"QuietWindow":    a.Quiet.Window(),
-			"SendAllowed":    a.Quiet.Allowed(now),
+			"QuietWindow": a.Quiet.Window(),
+			"SendAllowed": a.Quiet.Allowed(now),
 		}
 
 		// Opted-in count (the only members who can receive a reminder).
@@ -32,14 +31,12 @@ func RemindersGet(a *app.App) http.HandlerFunc {
 		}
 		data["OptedInCount"] = len(optedIn)
 
-		if a.Events.Configured() {
-			upcoming, err := a.Events.Upcoming(ctx, now)
-			if err != nil {
-				data["FeedError"] = err.Error()
-			} else {
-				data["Events"] = upcoming
-			}
+		upcoming, err := a.Store.UpcomingEvents(ctx, now)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
 		}
+		data["Events"] = upcoming
 
 		a.Render(w, r, "reminders", "Send a reminder", data)
 	}
@@ -70,9 +67,9 @@ func RemindersSend(a *app.App) http.HandlerFunc {
 			return
 		}
 
-		ev, err := a.Events.Find(ctx, slug, now)
+		ev, err := a.Store.GetEventBySlug(ctx, slug)
 		if err != nil {
-			redirectReminders(w, r, "err", "That event isn't in the feed anymore.")
+			redirectReminders(w, r, "err", "That event doesn't exist anymore.")
 			return
 		}
 
@@ -113,9 +110,9 @@ func RemindersSend(a *app.App) http.HandlerFunc {
 //
 //	American Legion Post 5: Reminder — Post 5 Monthly Meeting on Mon, Jul 13
 //	at 6:00 PM, The Farm. Reply STOP to opt out.
-func reminderBody(orgName string, ev *events.Event) string {
+func reminderBody(orgName string, ev *store.Event) string {
 	when := ""
-	if t := ev.Start(); !t.IsZero() {
+	if t := ev.StartsAt; !t.IsZero() {
 		when = t.Format("Mon, Jan 2 at 3:04 PM")
 	}
 	loc := ev.Location

@@ -19,15 +19,6 @@
   </div>
 </div>
 
-{{if not .FeedConfigured}}
-<div class="flash flash-error">
-  No events feed configured. Set <code>EVENTS_FEED_URL</code> (the site's
-  <code>/events/events.json</code>) so this screen can list events.
-</div>
-{{else if .FeedError}}
-<div class="flash flash-error">Couldn't load the events feed: {{.FeedError}}</div>
-{{end}}
-
 {{if .Events}}
 <form method="POST" action="/reminders/send" class="form"
       onsubmit="return confirm('Send this reminder to all {{.OptedInCount}} opted-in members?');">
@@ -38,7 +29,7 @@
       <input type="radio" name="event" value="{{.Slug}}" required>
       <span class="reminder-event-body">
         <span class="reminder-event-title">{{.Title}}</span>
-        <span class="reminder-event-meta">{{.StartsAt}} · {{.Location}}</span>
+        <span class="reminder-event-meta">{{.StartsAt.Format "Mon, Jan 2 · 3:04 PM"}}{{with .Location}} · {{.}}{{end}}</span>
       </span>
     </label>
     {{end}}
@@ -59,9 +50,10 @@
     member.
   </p>
 </form>
-{{else if .FeedConfigured}}
-{{if not .FeedError}}
-<p class="empty-state muted">No upcoming events in the feed right now.</p>
-{{end}}
+{{else}}
+<p class="empty-state muted">
+  No upcoming events yet. <a href="/events/new">Add an event</a> and it will
+  appear here and on the post's website.
+</p>
 {{end}}
 {{end}}

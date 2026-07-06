@@ -1,0 +1,77 @@
+{{define "events_form"}}{{template "layout" .}}{{end}}
+{{define "body"}}
+<header class="page-header">
+  <p class="breadcrumb"><a href="/events">← Events</a></p>
+  <h1>{{.Legend}}</h1>
+  <p class="muted">
+    This event will appear on the post's public website (with an
+    add-to-calendar button) and in the reminder screen. Times are in the
+    post's local time zone.
+  </p>
+</header>
+
+{{if .Error}}<div class="flash flash-error">{{.Error}}</div>{{end}}
+
+<form method="POST" action="{{.Action}}" class="form">
+  <div class="form-field">
+    <label for="title">Event title <span class="required">*</span></label>
+    <input id="title" name="title" type="text" required value="{{.Form.title}}" autofocus>
+  </div>
+
+  <div class="form-field">
+    <label for="date">Date <span class="required">*</span></label>
+    <input id="date" name="date" type="date" required value="{{.Form.date}}">
+  </div>
+
+  <div class="form-field">
+    <label for="start">Start time <span class="required">*</span></label>
+    <input id="start" name="start" type="time" required value="{{.Form.start}}">
+  </div>
+
+  <div class="form-field">
+    <label for="end">End time <span class="muted">(optional)</span></label>
+    <input id="end" name="end" type="time" value="{{.Form.end}}">
+  </div>
+
+  <div class="form-field">
+    <label for="location">Location</label>
+    <input id="location" name="location" type="text" value="{{.Form.location}}"
+           placeholder="The Farm — 493 Jones Bend Rd NE, Rome, GA 30165">
+    <p class="form-help">Full street address helps the website's map link.</p>
+  </div>
+
+  <div class="form-field">
+    <label for="contactName">Contact name</label>
+    <input id="contactName" name="contactName" type="text" value="{{.Form.contactName}}">
+  </div>
+
+  <div class="form-field">
+    <label for="contactPhone">Contact phone</label>
+    <input id="contactPhone" name="contactPhone" type="tel" value="{{.Form.contactPhone}}">
+  </div>
+
+  <div class="form-field">
+    <label for="description">One-line summary</label>
+    <input id="description" name="description" type="text" value="{{.Form.description}}"
+           placeholder="Shown on event cards and in search results.">
+  </div>
+
+  <div class="form-field">
+    <label for="body">Details <span class="muted">(optional)</span></label>
+    <textarea id="body" name="body" rows="7"
+              placeholder="Full description shown on the event's page. Plain text is fine.">{{.Form.body}}</textarea>
+  </div>
+
+  {{if .Event}}
+  <p class="form-help">
+    Web address: <code>/events/{{.Event.Slug}}/</code> (stays the same when you
+    edit, so shared links keep working).
+  </p>
+  {{end}}
+
+  <div class="form-actions">
+    <a href="/events" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary">Save event</button>
+  </div>
+</form>
+{{end}}

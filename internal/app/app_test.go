@@ -22,8 +22,10 @@ func TestPagesRenderTheirOwnBody(t *testing.T) {
 	}
 
 	markers := map[string]string{
-		"login":     `name="password"`,
-		"reminders": "Send a reminder",
+		"login":       `name="password"`,
+		"reminders":   "Send a reminder",
+		"events_list": "Add an event",
+		"events_form": `name="title"`,
 	}
 	const remindersMarker = "Send a reminder"
 
@@ -33,7 +35,7 @@ func TestPagesRenderTheirOwnBody(t *testing.T) {
 			t.Fatalf("no template set for page %q", page)
 		}
 		var buf bytes.Buffer
-		if err := set.ExecuteTemplate(&buf, page, map[string]any{"Title": "t"}); err != nil {
+		if err := set.ExecuteTemplate(&buf, page, map[string]any{"Title": "t", "Form": map[string]string{}}); err != nil {
 			t.Fatalf("execute %q: %v", page, err)
 		}
 		out := buf.String()

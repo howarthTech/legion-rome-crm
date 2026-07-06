@@ -15,6 +15,7 @@ import (
 
 	"github.com/howarthTech/legion-rome-crm/internal/auth"
 	"github.com/howarthTech/legion-rome-crm/internal/events"
+	"github.com/howarthTech/legion-rome-crm/internal/rebuild"
 	"github.com/howarthTech/legion-rome-crm/internal/sms"
 	"github.com/howarthTech/legion-rome-crm/internal/store"
 )
@@ -24,8 +25,8 @@ type App struct {
 	Store      *store.Store
 	Twilio     *sms.Client
 	Auth       *auth.Manager
-	Events     *events.Client
 	Quiet      *events.QuietHours
+	Rebuild    *rebuild.Notifier
 	Templates  map[string]*template.Template // one set per page: layout + that page
 	StaticFS   http.Handler
 	PublicURL  string // canonical public URL (used for Twilio webhook signature verification)
@@ -38,8 +39,8 @@ type Deps struct {
 	Store     *store.Store
 	Twilio    *sms.Client
 	Auth      *auth.Manager
-	Events    *events.Client
 	Quiet     *events.QuietHours
+	Rebuild   *rebuild.Notifier
 	TplFS     fs.FS
 	StaticFS  embed.FS
 	PublicURL string
@@ -60,8 +61,8 @@ func New(d Deps) (*App, error) {
 		Store:     d.Store,
 		Twilio:    d.Twilio,
 		Auth:      d.Auth,
-		Events:    d.Events,
 		Quiet:     d.Quiet,
+		Rebuild:   d.Rebuild,
 		Templates: tpl,
 		StaticFS:  http.FileServer(http.FS(staticSub)),
 		PublicURL: strings.TrimRight(d.PublicURL, "/"),
@@ -77,6 +78,7 @@ func New(d Deps) (*App, error) {
 // TestPagesRenderTheirOwnBody).
 var pageNames = []string{
 	"login", "dashboard", "members_list", "members_new", "member_view", "reminders",
+	"events_list", "events_form",
 }
 
 func loadTemplates(tplFS fs.FS) (map[string]*template.Template, error) {
