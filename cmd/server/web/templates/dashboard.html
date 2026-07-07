@@ -10,20 +10,37 @@
   <div class="setup-head">
     <div>
       <h2>Finish setting up your website</h2>
-      <p class="muted">A few steps and your post's site is ready. Do them in any order.</p>
+      <p class="muted">
+        {{if gt .PendingCount 0}}A few steps and your post's site is ready. Do them in any order — or skip one to come back later.
+        {{else}}You've handled the essentials. Skipped steps are waiting below whenever you're ready.{{end}}
+      </p>
     </div>
     <div class="setup-pct">{{.DoneCount}}/{{.Total}}</div>
   </div>
   <div class="setup-bar"><span style="width:{{.Percent}}%"></span></div>
   <ol class="setup-steps">
     {{range .Steps}}
-    <li class="{{if .Done}}done{{end}}">
-      <span class="setup-check" aria-hidden="true">{{if .Done}}&#10003;{{else}}&#9675;{{end}}</span>
+    <li class="{{if .Done}}done{{else if .Skipped}}skipped{{end}}">
+      <span class="setup-check" aria-hidden="true">{{if .Done}}&#10003;{{else if .Skipped}}&#8635;{{else}}&#9675;{{end}}</span>
       <span class="setup-body">
         <a href="{{.Link}}" class="setup-label">{{.Label}}</a>
-        <span class="setup-help">{{.Help}}</span>
+        <span class="setup-help">{{if .Skipped}}Skipped for now — come back anytime.{{else}}{{.Help}}{{end}}</span>
       </span>
-      {{if not .Done}}<a href="{{.Link}}" class="btn btn-secondary btn-sm">Start</a>{{end}}
+      {{if .Done}}{{else if .Skipped}}
+        <span class="setup-actions">
+          <a href="{{.Link}}" class="btn btn-secondary btn-sm">Do it now</a>
+          <form method="POST" action="/onboarding/unskip?step={{.Key}}" class="inline-form">
+            <button type="submit" class="link-button setup-mini">Un-skip</button>
+          </form>
+        </span>
+      {{else}}
+        <span class="setup-actions">
+          <a href="{{.Link}}" class="btn btn-secondary btn-sm">Start</a>
+          <form method="POST" action="/onboarding/skip?step={{.Key}}" class="inline-form">
+            <button type="submit" class="link-button setup-mini">Skip for now</button>
+          </form>
+        </span>
+      {{end}}
     </li>
     {{end}}
   </ol>

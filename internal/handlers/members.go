@@ -38,7 +38,7 @@ func Dashboard(a *app.App) http.HandlerFunc {
 			"Pending":        counts[store.OptInPending],
 			"OptedOut":       counts[store.OptInOptedOut],
 			"Onboarding":     ob,
-			"ShowOnboarding": ob != nil && !ob.Complete && !dismissed,
+			"ShowOnboarding": ob != nil && !ob.AllDone && !dismissed,
 		})
 	}
 }
@@ -47,6 +47,23 @@ func Dashboard(a *app.App) http.HandlerFunc {
 func OnboardingDismiss(a *app.App) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		_ = a.Store.SetSettingBool(r.Context(), store.SettingOnboardingDismissed, true)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	}
+}
+
+// validOnboardingStep guards the step key from arbitrary setting writes.
+var validOnboardingStep = map[string]bool{
+	"info": true, "roster": true, "pages": true, "events": true, "members": true,
+}
+
+// OnboardingSkip defers a step ("skip for now"); OnboardingUnskip brings it
+// back. Both take ?step=<key> and return to the dashboard.
+func OnboardingSkip(a *app.App, skip bool) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		step := r.URL.Query().Get("step")
+		if validOnboardingStep[step] {
+			_ = a.Store.SetOnboardingSkip(r.Context(), step, skip)
+		}
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }

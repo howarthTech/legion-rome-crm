@@ -105,6 +105,8 @@ func main() {
 	// Protected — admin only
 	mux.HandleFunc("GET /{$}", authMgr.RequireAuth(handlers.Dashboard(a)))
 	mux.HandleFunc("POST /onboarding/dismiss", authMgr.RequireAuth(handlers.OnboardingDismiss(a)))
+	mux.HandleFunc("POST /onboarding/skip", authMgr.RequireAuth(handlers.OnboardingSkip(a, true)))
+	mux.HandleFunc("POST /onboarding/unskip", authMgr.RequireAuth(handlers.OnboardingSkip(a, false)))
 	mux.HandleFunc("GET /members", authMgr.RequireAuth(handlers.MembersList(a)))
 	mux.HandleFunc("GET /members/new", authMgr.RequireAuth(handlers.MembersNewGet(a)))
 	mux.HandleFunc("POST /members", authMgr.RequireAuth(handlers.MembersNewPost(a)))
