@@ -24,6 +24,7 @@ import (
 	"github.com/howarthTech/legion-rome-crm/internal/app"
 	"github.com/howarthTech/legion-rome-crm/internal/auth"
 	"github.com/howarthTech/legion-rome-crm/internal/events"
+	"github.com/howarthTech/legion-rome-crm/internal/geocode"
 	"github.com/howarthTech/legion-rome-crm/internal/handlers"
 	"github.com/howarthTech/legion-rome-crm/internal/rebuild"
 	"github.com/howarthTech/legion-rome-crm/internal/sms"
@@ -80,6 +81,7 @@ func main() {
 		Auth:      authMgr,
 		Quiet:     quiet,
 		Rebuild:   rebuilder,
+		Geocode:   geocode.New(),
 		TplFS:     templatesFS,
 		StaticFS:  staticFS,
 		PublicURL: cfg.PublicURL,
@@ -117,6 +119,10 @@ func main() {
 	mux.HandleFunc("GET /events/{id}/edit", authMgr.RequireAuth(handlers.EventsEditGet(a)))
 	mux.HandleFunc("POST /events/{id}", authMgr.RequireAuth(handlers.EventsUpdate(a)))
 	mux.HandleFunc("POST /events/{id}/delete", authMgr.RequireAuth(handlers.EventsDelete(a)))
+	mux.HandleFunc("GET /locations", authMgr.RequireAuth(handlers.LocationsList(a)))
+	mux.HandleFunc("POST /locations", authMgr.RequireAuth(handlers.LocationsCreate(a)))
+	mux.HandleFunc("POST /locations/{id}/delete", authMgr.RequireAuth(handlers.LocationsDelete(a)))
+	mux.HandleFunc("GET /locations/check", authMgr.RequireAuth(handlers.LocationsCheck(a)))
 
 	// Public read-only feed: the website builds its event pages from this.
 	// Everything in it is already public on the site; no auth by design.

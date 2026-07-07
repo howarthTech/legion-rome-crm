@@ -44,10 +44,12 @@ func EventsList(a *app.App) http.HandlerFunc {
 // EventsNewGet renders an empty event form.
 func EventsNewGet(a *app.App) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		locs, _ := a.Store.ListLocations(r.Context())
 		a.Render(w, r, "events_form", "Add an event", map[string]any{
-			"Action": "/events",
-			"Legend": "Add an event",
-			"Form":   map[string]string{},
+			"Action":    "/events",
+			"Legend":    "Add an event",
+			"Form":      map[string]string{},
+			"Locations": locs,
 		})
 	}
 }
@@ -55,11 +57,12 @@ func EventsNewGet(a *app.App) http.HandlerFunc {
 // EventsCreate handles the new-event POST.
 func EventsCreate(a *app.App) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ev, formErr := eventFromForm(a, r)
+		ev, formErr := eventFromForm(a, r, nil)
 		if formErr != "" {
+			locs, _ := a.Store.ListLocations(r.Context())
 			a.Render(w, r, "events_form", "Add an event", map[string]any{
 				"Action": "/events", "Legend": "Add an event",
-				"Error": formErr, "Form": formEcho(r),
+				"Error": formErr, "Form": formEcho(r), "Locations": locs,
 			})
 			return
 		}
@@ -86,7 +89,6 @@ func EventsEditGet(a *app.App) http.HandlerFunc {
 			"date":         ev.StartsAt.Format("2006-01-02"),
 			"start":        ev.StartsAt.Format("15:04"),
 			"end":          "",
-			"location":     ev.Location,
 			"contactName":  ev.ContactName,
 			"contactPhone": ev.ContactPhone,
 			"description":  ev.Description,
@@ -97,11 +99,13 @@ func EventsEditGet(a *app.App) http.HandlerFunc {
 				form["end"] = t.Format("15:04")
 			}
 		}
+		locs, _ := a.Store.ListLocations(r.Context())
 		a.Render(w, r, "events_form", "Edit event", map[string]any{
-			"Action": fmt.Sprintf("/events/%d", ev.ID),
-			"Legend": "Edit event",
-			"Form":   form,
-			"Event":  ev,
+			"Action":    fmt.Sprintf("/events/%d", ev.ID),
+			"Legend":    "Edit event",
+			"Form":      form,
+			"Event":     ev,
+			"Locations": locs,
 		})
 	}
 }
@@ -114,11 +118,12 @@ func EventsUpdate(a *app.App) http.HandlerFunc {
 			http.NotFound(w, r)
 			return
 		}
-		ev, formErr := eventFromForm(a, r)
+		ev, formErr := eventFromForm(a, r, existing)
 		if formErr != "" {
+			locs, _ := a.Store.ListLocations(r.Context())
 			a.Render(w, r, "events_form", "Edit event", map[string]any{
 				"Action": fmt.Sprintf("/events/%d", existing.ID), "Legend": "Edit event",
-				"Error": formErr, "Form": formEcho(r), "Event": existing,
+				"Error": formErr, "Form": formEcho(r), "Event": existing, "Locations": locs,
 			})
 			return
 		}
@@ -202,8 +207,9 @@ func getEventFromPath(a *app.App, r *http.Request) (*store.Event, error) {
 }
 
 // eventFromForm validates the posted form and assembles a store.Event.
+// existing is non-nil on edit (enables the "keep current location" choice).
 // Returns a user-facing error string when invalid.
-func eventFromForm(a *app.App, r *http.Request) (store.Event, string) {
+func eventFromForm(a *app.App, r *http.Request, existing *store.Event) (store.Event, string) {
 	if err := r.ParseForm(); err != nil {
 		return store.Event{}, "That form didn't come through right — please try again."
 	}
@@ -222,11 +228,17 @@ func eventFromForm(a *app.App, r *http.Request) (store.Event, string) {
 	if err != nil {
 		return store.Event{}, "Couldn't read the date/start time — use the date picker and HH:MM."
 	}
+
+	locationText, locErr := resolveEventLocation(a, r, existing)
+	if locErr != "" {
+		return store.Event{}, locErr
+	}
+
 	ev := store.Event{
 		Title:        title,
 		Type:         eventType,
 		StartsAt:     startsAt,
-		Location:     f("location"),
+		Location:     locationText,
 		ContactName:  f("contactName"),
 		ContactPhone: f("contactPhone"),
 		Description:  f("description"),
@@ -245,9 +257,44 @@ func eventFromForm(a *app.App, r *http.Request) (store.Event, string) {
 	return ev, ""
 }
 
+// resolveEventLocation turns the form's location choice into the text stored
+// on the event. Choices: "" (no location), "keep" (edit only — keep the
+// current text), "loc:<id>" (a known location), or "new" (check the address,
+// name it, save it as a known location, use it).
+func resolveEventLocation(a *app.App, r *http.Request, existing *store.Event) (string, string) {
+	choice := strings.TrimSpace(r.PostForm.Get("locationChoice"))
+	switch {
+	case choice == "" || choice == "none":
+		return "", ""
+	case choice == "keep":
+		if existing == nil {
+			return "", "Choose a location."
+		}
+		return existing.Location, ""
+	case strings.HasPrefix(choice, "loc:"):
+		id, err := strconv.ParseInt(strings.TrimPrefix(choice, "loc:"), 10, 64)
+		if err != nil {
+			return "", "Choose a location."
+		}
+		loc, err := a.Store.GetLocation(r.Context(), id)
+		if err != nil {
+			return "", "That location no longer exists — pick another."
+		}
+		return loc.Display(), ""
+	case choice == "new":
+		_, display, errMsg := resolveNewLocation(a, r,
+			strings.TrimSpace(r.PostForm.Get("newLocationAddress")),
+			strings.TrimSpace(r.PostForm.Get("newLocationName")),
+			r.PostForm.Get("skipCheck") == "on")
+		return display, errMsg
+	default:
+		return "", "Choose a location."
+	}
+}
+
 func formEcho(r *http.Request) map[string]string {
 	m := map[string]string{}
-	for _, k := range []string{"title", "eventType", "date", "start", "end", "location", "contactName", "contactPhone", "description", "body"} {
+	for _, k := range []string{"title", "eventType", "date", "start", "end", "locationChoice", "newLocationAddress", "newLocationName", "contactName", "contactPhone", "description", "body"} {
 		m[k] = r.PostForm.Get(k)
 	}
 	return m

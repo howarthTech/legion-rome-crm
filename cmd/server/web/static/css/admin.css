@@ -314,3 +314,9 @@ fieldset.form-field legend { font-weight: 600; padding: 0 0.35rem; }
 .radio-option { display: flex; gap: 0.6rem; align-items: flex-start; padding: 0.45rem 0; cursor: pointer; }
 .radio-option input { margin-top: 0.25rem; flex: 0 0 auto; }
 .radio-option span { font-size: 0.9375rem; line-height: 1.45; }
+
+/* New-location sub-fields (events form + locations page) */
+[hidden] { display: none !important; }
+.new-location-fields { border-left: 3px solid var(--gold, #c9a445); padding-left: 1rem; margin: 0.5rem 0 1rem; }
+#check-address-result { font-size: 0.875rem; color: var(--muted); margin-left: 0.4rem; }
+select { font: inherit; padding: 0.5rem 0.6rem; border: 1px solid #c9c9c9; border-radius: 6px; background: #fff; max-width: 100%; }

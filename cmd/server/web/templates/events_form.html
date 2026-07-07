@@ -51,10 +51,42 @@
   </div>
 
   <div class="form-field">
-    <label for="location">Location</label>
-    <input id="location" name="location" type="text" value="{{.Form.location}}"
-           placeholder="The Farm — 493 Jones Bend Rd NE, Rome, GA 30165">
-    <p class="form-help">Full street address helps the website's map link.</p>
+    <label for="locationChoice">Location</label>
+    <select id="locationChoice" name="locationChoice">
+      {{if .Event}}
+      <option value="keep" {{if ne .Form.locationChoice "new"}}selected{{end}}>Current: {{.Event.Location}}</option>
+      {{end}}
+      <option value="none" {{if and (not .Event) (eq .Form.locationChoice "")}}selected{{end}}>— No location —</option>
+      {{range .Locations}}
+      <option value="loc:{{.ID}}" {{if eq $.Form.locationChoice (printf "loc:%d" .ID)}}selected{{end}}>{{.Name}} ({{.Address}})</option>
+      {{end}}
+      <option value="new" {{if eq .Form.locationChoice "new"}}selected{{end}}>+ Add a new location…</option>
+    </select>
+    <p class="form-help">Known locations are managed on the <a href="/locations">Locations</a> page.</p>
+  </div>
+
+  <div id="new-location-fields" class="new-location-fields" hidden>
+    <div class="form-field">
+      <label for="newLocationAddress">New location's address</label>
+      <input id="newLocationAddress" name="newLocationAddress" type="text"
+             value="{{.Form.newLocationAddress}}"
+             placeholder="493 Jones Bend Rd NE, Rome, GA 30165">
+      <p class="form-help">
+        Checked against the map when you save.
+        <button type="button" class="link-button" id="check-address-btn">Check it now</button>
+        <span id="check-address-result" role="status"></span>
+      </p>
+    </div>
+    <div class="form-field">
+      <label for="newLocationName">Name for this location <span class="muted">(your label, or the checked name)</span></label>
+      <input id="newLocationName" name="newLocationName" type="text"
+             value="{{.Form.newLocationName}}" placeholder="The Farm">
+    </div>
+    <label class="radio-option">
+      <input type="checkbox" name="skipCheck">
+      <span>Skip the address check (use when the checker can't find a place you
+      know is right).</span>
+    </label>
   </div>
 
   <div class="form-field">
@@ -91,4 +123,6 @@
     <button type="submit" class="btn btn-primary">Save event</button>
   </div>
 </form>
+
+<script src="/static/js/location-picker.js"></script>
 {{end}}
