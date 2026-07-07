@@ -63,8 +63,11 @@ func TwilioInbound(a *app.App) http.HandlerFunc {
 				reply = ""
 			} else {
 				_ = a.Store.SetOptedIn(ctx, memberID)
+				// Confirmation wording mirrors the registered A2P opt-in
+				// message: brand, frequency, rates, HELP and STOP. Carriers
+				// look for these disclosures.
 				reply = fmt.Sprintf(
-					"%s: You're confirmed on our event reminder list. We'll text you ahead of upcoming meetings. Reply STOP anytime to opt out.",
+					"%s: You're confirmed for event reminders. Msg frequency varies, msg & data rates may apply. Reply HELP for help, STOP to cancel.",
 					a.OrgName)
 				_ = a.Store.LogOutbound(ctx, memberID, from, reply, "", "queued", "")
 			}
