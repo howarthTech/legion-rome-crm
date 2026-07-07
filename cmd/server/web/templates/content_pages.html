@@ -1,0 +1,21 @@
+{{define "content_pages"}}{{template "layout" .}}{{end}}
+{{define "body"}}
+<header class="page-header">
+  <p class="breadcrumb"><a href="/content">← Website content</a></p>
+  <h1>Pages</h1>
+  <p class="muted">Written pages on your site. Edit any of them anytime.</p>
+</header>
+
+<table class="table">
+  <thead><tr><th>Page</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+    {{range .Pages}}
+    <tr>
+      <td><strong>{{.Title}}</strong><br><span class="muted" style="font-size:.85rem">{{.Help}}</span></td>
+      <td>{{if .Written}}<span class="badge badge-ok">Written</span>{{else}}<span class="badge badge-pending">Not started</span>{{end}}</td>
+      <td class="table-actions"><a href="/content/pages/{{.Slug}}" class="btn btn-secondary btn-sm">Edit</a></td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+{{end}}

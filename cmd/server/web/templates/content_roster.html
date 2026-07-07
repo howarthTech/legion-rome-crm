@@ -1,0 +1,83 @@
+{{define "content_roster"}}{{template "layout" .}}{{end}}
+{{define "roster_section"}}
+{{/* dot: dict with Title, Group, Members, AddLabel */}}
+<h2>{{.Title}}</h2>
+{{if .Members}}
+<table class="table">
+  <thead><tr><th>Order</th><th>Role</th><th>Name</th><th>Contact</th><th></th></tr></thead>
+  <tbody>
+    {{range .Members}}
+    <tr>
+      <td class="nowrap">
+        <a href="/content/roster/{{.ID}}/move?dir=up" title="Move up" aria-label="Move up">▲</a>
+        <a href="/content/roster/{{.ID}}/move?dir=down" title="Move down" aria-label="Move down">▼</a>
+      </td>
+      <td>{{.Role}}</td>
+      <td><strong>{{.Name}}</strong></td>
+      <td class="muted">{{.Phone}}{{if and .Phone .Email}} · {{end}}{{.Email}}</td>
+      <td class="table-actions">
+        <button type="button" class="btn btn-secondary btn-sm"
+          onclick="editRoster(this)"
+          data-id="{{.ID}}" data-role="{{.Role}}" data-name="{{.Name}}" data-phone="{{.Phone}}" data-email="{{.Email}}">Edit</button>
+        <form method="POST" action="/content/roster/{{.ID}}/delete" class="inline-form"
+          onsubmit="return confirm('Remove {{.Name}} from the site?');">
+          <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+        </form>
+      </td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+{{else}}
+<p class="empty-state muted">None yet.</p>
+{{end}}
+<form method="POST" action="/content/roster" class="form roster-add">
+  <input type="hidden" name="group" value="{{.Group}}">
+  <div class="roster-add-row">
+    <input name="role" placeholder="Role (e.g. Commander)" required aria-label="Role">
+    <input name="name" placeholder="Name" required aria-label="Name">
+    <input name="phone" type="tel" placeholder="Phone (optional)" aria-label="Phone">
+    <input name="email" type="email" placeholder="Email (optional)" aria-label="Email">
+    <button type="submit" class="btn btn-primary btn-sm">Add</button>
+  </div>
+</form>
+{{end}}
+
+{{define "body"}}
+<header class="page-header">
+  <p class="breadcrumb"><a href="/content">← Website content</a></p>
+  <h1>Officers &amp; family</h1>
+  <p class="muted">These appear on your About and Legion-family pages. Use ▲▼ to
+  reorder.</p>
+</header>
+
+{{template "roster_section" dict "Title" "Post officers" "Group" "officer" "Members" .Officers}}
+<div style="height:1.5rem"></div>
+{{template "roster_section" dict "Title" "Legion family contacts" "Group" "family" "Members" .Family}}
+
+<!-- Inline edit dialog -->
+<dialog id="roster-edit">
+  <form method="POST" id="roster-edit-form" class="form">
+    <h2 style="margin-bottom:1rem">Edit</h2>
+    <div class="form-field"><label>Role</label><input name="role" id="re-role" required></div>
+    <div class="form-field"><label>Name</label><input name="name" id="re-name" required></div>
+    <div class="form-field"><label>Phone</label><input name="phone" id="re-phone" type="tel"></div>
+    <div class="form-field"><label>Email</label><input name="email" id="re-email" type="email"></div>
+    <div class="form-actions">
+      <button type="button" class="btn btn-secondary" onclick="document.getElementById('roster-edit').close()">Cancel</button>
+      <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+  </form>
+</dialog>
+<script>
+function editRoster(btn){
+  var d=btn.dataset, dlg=document.getElementById('roster-edit');
+  document.getElementById('roster-edit-form').action='/content/roster/'+d.id;
+  document.getElementById('re-role').value=d.role;
+  document.getElementById('re-name').value=d.name;
+  document.getElementById('re-phone').value=d.phone;
+  document.getElementById('re-email').value=d.email;
+  if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open','');
+}
+</script>
+{{end}}

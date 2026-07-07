@@ -127,9 +127,23 @@ func main() {
 	mux.HandleFunc("GET /settings", authMgr.RequireAuth(handlers.SettingsGet(a)))
 	mux.HandleFunc("POST /settings", authMgr.RequireAuth(handlers.SettingsPost(a)))
 
-	// Public read-only feed: the website builds its event pages from this.
-	// Everything in it is already public on the site; no auth by design.
+	// Website content editor (post info, roster, prose pages).
+	mux.HandleFunc("GET /content", authMgr.RequireAuth(handlers.ContentHub(a)))
+	mux.HandleFunc("GET /content/info", authMgr.RequireAuth(handlers.ContentInfoGet(a)))
+	mux.HandleFunc("POST /content/info", authMgr.RequireAuth(handlers.ContentInfoPost(a)))
+	mux.HandleFunc("GET /content/roster", authMgr.RequireAuth(handlers.ContentRoster(a)))
+	mux.HandleFunc("POST /content/roster", authMgr.RequireAuth(handlers.ContentRosterCreate(a)))
+	mux.HandleFunc("POST /content/roster/{id}", authMgr.RequireAuth(handlers.ContentRosterUpdate(a)))
+	mux.HandleFunc("POST /content/roster/{id}/delete", authMgr.RequireAuth(handlers.ContentRosterDelete(a)))
+	mux.HandleFunc("POST /content/roster/{id}/move", authMgr.RequireAuth(handlers.ContentRosterMove(a)))
+	mux.HandleFunc("GET /content/pages", authMgr.RequireAuth(handlers.ContentPages(a)))
+	mux.HandleFunc("GET /content/pages/{slug}", authMgr.RequireAuth(handlers.ContentPageEditGet(a)))
+	mux.HandleFunc("POST /content/pages/{slug}", authMgr.RequireAuth(handlers.ContentPageSave(a)))
+
+	// Public read-only feeds: the website builds from these; all content is
+	// already public on the site, so no auth by design.
 	mux.HandleFunc("GET /api/events.json", handlers.EventsAPI(a))
+	mux.HandleFunc("GET /api/site.json", handlers.SiteAPI(a))
 
 	// Healthcheck for the deploy script's polling
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {

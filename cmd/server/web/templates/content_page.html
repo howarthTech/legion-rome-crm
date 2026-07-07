@@ -1,0 +1,26 @@
+{{define "content_page"}}{{template "layout" .}}{{end}}
+{{define "body"}}
+<header class="page-header">
+  <p class="breadcrumb"><a href="/content/pages">← Pages</a></p>
+  <h1>{{.DefTitle}}</h1>
+  {{with .Help}}<p class="muted">{{.}}</p>{{end}}
+</header>
+
+<form method="POST" action="/content/pages/{{.Slug}}" class="form">
+  <div class="form-field">
+    <label for="title">Page heading</label>
+    <input id="title" name="title" type="text" value="{{.Title}}">
+  </div>
+  <div class="form-field">
+    <label for="body">Content</label>
+    <textarea id="body" name="body" rows="16">{{.Body}}</textarea>
+    <p class="form-help">Plain text works. For simple formatting you can use
+    Markdown: <code>**bold**</code>, <code>- bullet</code>, and blank lines
+    between paragraphs.</p>
+  </div>
+  <div class="form-actions">
+    <a href="/content/pages" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary">Save page</button>
+  </div>
+</form>
+{{end}}

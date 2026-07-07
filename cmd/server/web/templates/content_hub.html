@@ -1,0 +1,33 @@
+{{define "content_hub"}}{{template "layout" .}}{{end}}
+{{define "body"}}
+<header class="page-header">
+  <h1>Website content</h1>
+  <p class="muted">
+    Everything here shows on your public website. Change it whenever you like —
+    the site updates automatically.
+  </p>
+</header>
+
+<div class="hub-grid">
+  <a class="hub-card" href="/content/info">
+    <h2>Post info</h2>
+    <p>Name, contact, meeting times, and the basics shown across the site.</p>
+  </a>
+  <a class="hub-card" href="/content/roster">
+    <h2>Officers &amp; family</h2>
+    <p>Your officer roster and Auxiliary / SAL / Riders contacts.</p>
+  </a>
+  <a class="hub-card" href="/content/pages">
+    <h2>Pages</h2>
+    <p>History, hall rental, membership, and other written pages.</p>
+  </a>
+  <a class="hub-card" href="/events">
+    <h2>Events</h2>
+    <p>Meetings and community events. Also feeds text reminders.</p>
+  </a>
+  <a class="hub-card" href="/locations">
+    <h2>Locations</h2>
+    <p>Saved venues used on events.</p>
+  </a>
+</div>
+{{end}}

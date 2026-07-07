@@ -352,3 +352,25 @@ select { font: inherit; padding: 0.5rem 0.6rem; border: 1px solid #c9c9c9; borde
   min-height: 44px;               /* comfortable touch target */
 }
 .form select { padding: 0.625rem 0.75rem; }
+
+/* Website content hub + editors */
+.hub-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(15rem,1fr)); gap:1rem; margin-top:1rem; }
+.hub-card { display:block; text-decoration:none; color:inherit; background:#fff; border:1px solid var(--rule,#d4d4d4); border-left:4px solid var(--navy,#1a2c50); border-radius:6px; padding:1.1rem 1.2rem; transition:box-shadow .12s, transform .12s; }
+.hub-card:hover { box-shadow:4px 5px 0 var(--gold,#c9a445); transform:translate(-2px,-2px); }
+.hub-card h2 { font-size:1.15rem; margin:0 0 .3rem; color:var(--navy,#1a2c50); }
+.hub-card p { margin:0; font-size:.9rem; color:var(--muted,#666); }
+.nowrap { white-space:nowrap; }
+.nowrap a { text-decoration:none; font-size:.9rem; padding:0 .15rem; }
+.roster-add { margin-top:.75rem; }
+.roster-add-row { display:grid; grid-template-columns:1fr 1fr 1fr 1fr auto; gap:.5rem; align-items:start; }
+.roster-add-row input { min-height:44px; padding:.5rem .6rem; border:1px solid #c9c9c9; border-radius:6px; font:inherit; width:100%; }
+@media (max-width:760px){ .roster-add-row { grid-template-columns:1fr 1fr; } }
+dialog#roster-edit { border:2px solid var(--navy,#1a2c50); border-radius:8px; padding:1.5rem; max-width:26rem; width:92%; }
+dialog#roster-edit::backdrop { background:rgba(15,27,49,.4); }
+
+/* Button + table-action variants used across events/locations/content screens */
+.btn-sm { padding:0.3rem 0.65rem; font-size:0.85rem; }
+.btn-danger { background:#fff; color:var(--red); border-color:var(--rule); }
+.btn-danger:hover { background:var(--red); color:#fff; border-color:var(--red); }
+.table-actions { white-space:nowrap; display:flex; gap:0.4rem; align-items:center; }
+.table-actions .inline-form { display:inline; }

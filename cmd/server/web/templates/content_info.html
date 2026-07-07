@@ -1,0 +1,32 @@
+{{define "content_info"}}{{template "layout" .}}{{end}}
+{{define "body"}}
+<header class="page-header">
+  <p class="breadcrumb"><a href="/content">← Website content</a></p>
+  <h1>Post info</h1>
+  <p class="muted">The basics shown across your site. Blank fields are simply
+  left off the site.</p>
+</header>
+
+<form method="POST" action="/content/info" class="form">
+  {{$v := .Values}}
+  {{range .Keys}}
+  <div class="form-field">
+    <label for="f-{{.Key}}">{{.Label}}</label>
+    {{if .Long}}
+    <textarea id="f-{{.Key}}" name="{{.Key}}" rows="2">{{index $v .Key}}</textarea>
+    {{else if eq .Key "phone"}}
+    <input id="f-{{.Key}}" name="{{.Key}}" type="tel" value="{{index $v .Key}}">
+    {{else if eq .Key "email"}}
+    <input id="f-{{.Key}}" name="{{.Key}}" type="email" value="{{index $v .Key}}">
+    {{else}}
+    <input id="f-{{.Key}}" name="{{.Key}}" type="text" value="{{index $v .Key}}">
+    {{end}}
+    {{with .Help}}<p class="form-help">{{.}}</p>{{end}}
+  </div>
+  {{end}}
+  <div class="form-actions">
+    <a href="/content" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary">Save post info</button>
+  </div>
+</form>
+{{end}}
