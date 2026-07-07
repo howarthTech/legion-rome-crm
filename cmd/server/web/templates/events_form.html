@@ -18,6 +18,23 @@
     <input id="title" name="title" type="text" required value="{{.Form.title}}" autofocus>
   </div>
 
+  <fieldset class="form-field">
+    <legend>Event type <span class="required">*</span></legend>
+    <label class="radio-option">
+      <input type="radio" name="eventType" value="post"
+             {{if ne .Form.eventType "community"}}checked{{end}}>
+      <span><strong>Post event</strong> — the post's own event (meeting, dinner,
+      party). Can be texted to opted-in members from the reminder screen.</span>
+    </label>
+    <label class="radio-option">
+      <input type="radio" name="eventType" value="community"
+             {{if eq .Form.eventType "community"}}checked{{end}}>
+      <span><strong>Community event</strong> — a public event the post takes part
+      in (parade, ceremony, town event). Shown on the website only; never sent
+      as a text reminder.</span>
+    </label>
+  </fieldset>
+
   <div class="form-field">
     <label for="date">Date <span class="required">*</span></label>
     <input id="date" name="date" type="date" required value="{{.Form.date}}">

@@ -31,7 +31,8 @@ func RemindersGet(a *app.App) http.HandlerFunc {
 		}
 		data["OptedInCount"] = len(optedIn)
 
-		upcoming, err := a.Store.UpcomingEvents(ctx, now)
+		// Post events only — community events are never SMS-reminded.
+		upcoming, err := a.Store.UpcomingEvents(ctx, now, store.EventTypePost)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return

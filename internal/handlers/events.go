@@ -82,6 +82,7 @@ func EventsEditGet(a *app.App) http.HandlerFunc {
 		}
 		form := map[string]string{
 			"title":        ev.Title,
+			"eventType":    ev.Type,
 			"date":         ev.StartsAt.Format("2006-01-02"),
 			"start":        ev.StartsAt.Format("15:04"),
 			"end":          "",
@@ -153,6 +154,7 @@ func EventsAPI(a *app.App) http.HandlerFunc {
 	type apiEvent struct {
 		Slug         string `json:"slug"`
 		Title        string `json:"title"`
+		Type         string `json:"type"`
 		StartsAt     string `json:"startsAt"`
 		EndsAt       string `json:"endsAt,omitempty"`
 		Location     string `json:"location,omitempty"`
@@ -178,7 +180,7 @@ func EventsAPI(a *app.App) http.HandlerFunc {
 		}
 		for _, e := range evs {
 			out.Events = append(out.Events, apiEvent{
-				Slug: e.Slug, Title: e.Title, StartsAt: e.StartsAtRaw, EndsAt: e.EndsAtRaw,
+				Slug: e.Slug, Title: e.Title, Type: e.Type, StartsAt: e.StartsAtRaw, EndsAt: e.EndsAtRaw,
 				Location: e.Location, ContactName: e.ContactName, ContactPhone: e.ContactPhone,
 				Description: e.Description, Body: e.Body,
 			})
@@ -211,6 +213,10 @@ func eventFromForm(a *app.App, r *http.Request) (store.Event, string) {
 	if title == "" || date == "" || start == "" {
 		return store.Event{}, "Title, date, and start time are required."
 	}
+	eventType := f("eventType")
+	if eventType != store.EventTypePost && eventType != store.EventTypeCommunity {
+		return store.Event{}, "Choose an event type."
+	}
 	loc := a.Quiet.Location()
 	startsAt, err := time.ParseInLocation("2006-01-02 15:04", date+" "+start, loc)
 	if err != nil {
@@ -218,6 +224,7 @@ func eventFromForm(a *app.App, r *http.Request) (store.Event, string) {
 	}
 	ev := store.Event{
 		Title:        title,
+		Type:         eventType,
 		StartsAt:     startsAt,
 		Location:     f("location"),
 		ContactName:  f("contactName"),
@@ -240,7 +247,7 @@ func eventFromForm(a *app.App, r *http.Request) (store.Event, string) {
 
 func formEcho(r *http.Request) map[string]string {
 	m := map[string]string{}
-	for _, k := range []string{"title", "date", "start", "end", "location", "contactName", "contactPhone", "description", "body"} {
+	for _, k := range []string{"title", "eventType", "date", "start", "end", "location", "contactName", "contactPhone", "description", "body"} {
 		m[k] = r.PostForm.Get(k)
 	}
 	return m

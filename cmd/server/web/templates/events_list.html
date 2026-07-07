@@ -14,12 +14,13 @@
 <h2>Upcoming</h2>
 <table class="table">
   <thead>
-    <tr><th>Event</th><th>When</th><th>Location</th><th></th></tr>
+    <tr><th>Event</th><th>Type</th><th>When</th><th>Location</th><th></th></tr>
   </thead>
   <tbody>
     {{range .Upcoming}}
     <tr>
       <td><strong>{{.Title}}</strong></td>
+      <td>{{if .IsCommunity}}<span class="badge">Community</span>{{else}}<span class="badge badge-ok">Post · SMS</span>{{end}}</td>
       <td>{{.StartsAt.Format "Mon, Jan 2, 2006 · 3:04 PM"}}</td>
       <td>{{.Location}}</td>
       <td class="table-actions">
@@ -41,12 +42,13 @@
 <h2>Past</h2>
 <table class="table">
   <thead>
-    <tr><th>Event</th><th>When</th><th>Location</th><th></th></tr>
+    <tr><th>Event</th><th>Type</th><th>When</th><th>Location</th><th></th></tr>
   </thead>
   <tbody>
     {{range .Past}}
     <tr>
       <td>{{.Title}}</td>
+      <td>{{if .IsCommunity}}<span class="badge">Community</span>{{else}}<span class="badge badge-ok">Post · SMS</span>{{end}}</td>
       <td>{{.StartsAt.Format "Mon, Jan 2, 2006 · 3:04 PM"}}</td>
       <td>{{.Location}}</td>
       <td class="table-actions">
