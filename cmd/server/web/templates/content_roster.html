@@ -34,7 +34,8 @@
 <form method="POST" action="/content/roster" class="form roster-add">
   <input type="hidden" name="group" value="{{.Group}}">
   <div class="roster-add-row">
-    <input name="role" placeholder="Role (e.g. Commander)" required aria-label="Role">
+    <input name="role" placeholder="Role (e.g. Commander)" required aria-label="Role"
+           list="post-titles" autocomplete="off">
     <input name="name" placeholder="Name" required aria-label="Name">
     <input name="phone" type="tel" placeholder="Phone (optional)" aria-label="Phone">
     <input name="email" type="email" placeholder="Email (optional)" aria-label="Email">
@@ -51,6 +52,10 @@
   reorder.</p>
 </header>
 
+<datalist id="post-titles">
+  {{range officerTitles}}<option value="{{.}}"></option>{{end}}
+</datalist>
+
 {{template "roster_section" dict "Title" "Post officers" "Group" "officer" "Members" .Officers}}
 <div style="height:1.5rem"></div>
 {{template "roster_section" dict "Title" "Legion family contacts" "Group" "family" "Members" .Family}}
@@ -59,7 +64,7 @@
 <dialog id="roster-edit">
   <form method="POST" id="roster-edit-form" class="form">
     <h2 style="margin-bottom:1rem">Edit</h2>
-    <div class="form-field"><label>Role</label><input name="role" id="re-role" required></div>
+    <div class="form-field"><label>Role</label><input name="role" id="re-role" list="post-titles" autocomplete="off" required></div>
     <div class="form-field"><label>Name</label><input name="name" id="re-name" required></div>
     <div class="form-field"><label>Phone</label><input name="phone" id="re-phone" type="tel"></div>
     <div class="form-field"><label>Email</label><input name="email" id="re-email" type="email"></div>

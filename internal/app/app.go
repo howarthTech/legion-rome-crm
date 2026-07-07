@@ -86,8 +86,33 @@ var pageNames = []string{
 	"content_hub", "content_info", "content_roster", "content_pages", "content_page",
 }
 
+// OfficerTitles are common American Legion post (and family) titles offered as
+// suggestions wherever a title/role is entered. These are suggestions only —
+// every title field is free text, so any custom title works too.
+var OfficerTitles = []string{
+	"Commander",
+	"Senior Vice Commander",
+	"Junior Vice Commander",
+	"Adjutant",
+	"Finance Officer",
+	"Chaplain",
+	"Sergeant-at-Arms",
+	"Historian",
+	"Service Officer",
+	"Judge Advocate",
+	"Membership Chairman",
+	"Americanism Officer",
+	"Executive Committeeman",
+	"Auxiliary President",
+	"Sons of The American Legion Commander",
+	"Legion Riders Director",
+}
+
 func loadTemplates(tplFS fs.FS) (map[string]*template.Template, error) {
 	funcs := template.FuncMap{
+		// officerTitles exposes the suggestion list to templates for
+		// <datalist> options.
+		"officerTitles": func() []string { return OfficerTitles },
 		// dict builds a map from alternating key/value args, for passing
 		// multiple values to a nested template ({{template "x" dict "K" v}}).
 		"dict": func(pairs ...any) (map[string]any, error) {

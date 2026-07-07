@@ -23,18 +23,7 @@
     <input id="title" name="title" type="text" value="{{.FormTitle}}"
            list="common-titles" autocomplete="off" placeholder="Commander">
     <datalist id="common-titles">
-      <option value="Commander"></option>
-      <option value="Vice Commander"></option>
-      <option value="Adjutant"></option>
-      <option value="Finance Officer"></option>
-      <option value="Chaplain"></option>
-      <option value="Historian"></option>
-      <option value="Sergeant-at-Arms"></option>
-      <option value="Service Officer"></option>
-      <option value="Judge Advocate"></option>
-      <option value="Auxiliary President"></option>
-      <option value="SAL Commander"></option>
-      <option value="Riders Director"></option>
+      {{range officerTitles}}<option value="{{.}}"></option>{{end}}
     </datalist>
     <p class="form-help">With a rank set, messages open with e.g.
     “Hi Commander Hollis” instead of a first name. Can be switched off in
