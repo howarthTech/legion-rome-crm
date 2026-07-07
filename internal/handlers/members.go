@@ -27,12 +27,27 @@ func Dashboard(a *app.App) http.HandlerFunc {
 		for _, m := range members {
 			counts[m.OptInStatus]++
 		}
+
+		// First-run setup checklist: show until complete (or dismissed).
+		ob, _ := a.Store.OnboardingStatus(ctx)
+		dismissed, _ := a.Store.GetSettingBool(ctx, store.SettingOnboardingDismissed, false)
+
 		a.Render(w, r, "dashboard", "Dashboard", map[string]any{
-			"Total":   len(members),
-			"OptedIn": counts[store.OptInConfirmed],
-			"Pending": counts[store.OptInPending],
-			"OptedOut": counts[store.OptInOptedOut],
+			"Total":          len(members),
+			"OptedIn":        counts[store.OptInConfirmed],
+			"Pending":        counts[store.OptInPending],
+			"OptedOut":       counts[store.OptInOptedOut],
+			"Onboarding":     ob,
+			"ShowOnboarding": ob != nil && !ob.Complete && !dismissed,
 		})
+	}
+}
+
+// OnboardingDismiss hides the setup checklist even if incomplete.
+func OnboardingDismiss(a *app.App) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		_ = a.Store.SetSettingBool(r.Context(), store.SettingOnboardingDismissed, true)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }
 

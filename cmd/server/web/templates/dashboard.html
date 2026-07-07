@@ -5,6 +5,34 @@
   <p class="muted">Welcome back. Here's the current state of the reminder list.</p>
 </header>
 
+{{if .ShowOnboarding}}{{with .Onboarding}}
+<section class="setup-card">
+  <div class="setup-head">
+    <div>
+      <h2>Finish setting up your website</h2>
+      <p class="muted">A few steps and your post's site is ready. Do them in any order.</p>
+    </div>
+    <div class="setup-pct">{{.DoneCount}}/{{.Total}}</div>
+  </div>
+  <div class="setup-bar"><span style="width:{{.Percent}}%"></span></div>
+  <ol class="setup-steps">
+    {{range .Steps}}
+    <li class="{{if .Done}}done{{end}}">
+      <span class="setup-check" aria-hidden="true">{{if .Done}}&#10003;{{else}}&#9675;{{end}}</span>
+      <span class="setup-body">
+        <a href="{{.Link}}" class="setup-label">{{.Label}}</a>
+        <span class="setup-help">{{.Help}}</span>
+      </span>
+      {{if not .Done}}<a href="{{.Link}}" class="btn btn-secondary btn-sm">Start</a>{{end}}
+    </li>
+    {{end}}
+  </ol>
+  <form method="POST" action="/onboarding/dismiss" class="inline-form">
+    <button type="submit" class="link-button setup-dismiss">Hide this checklist</button>
+  </form>
+</section>
+{{end}}{{end}}
+
 <div class="stat-grid">
   <div class="stat-card">
     <div class="stat-value">{{.Total}}</div>

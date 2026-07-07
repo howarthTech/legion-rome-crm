@@ -374,3 +374,22 @@ dialog#roster-edit::backdrop { background:rgba(15,27,49,.4); }
 .btn-danger:hover { background:var(--red); color:#fff; border-color:var(--red); }
 .table-actions { white-space:nowrap; display:flex; gap:0.4rem; align-items:center; }
 .table-actions .inline-form { display:inline; }
+
+/* First-run setup checklist (dashboard onboarding) */
+.setup-card { background:#fff; border:1px solid var(--rule,#e3ddcf); border-left:5px solid var(--gold,#c8a85a); border-radius:6px; padding:1.25rem 1.4rem; margin-bottom:1.75rem; }
+.setup-head { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; }
+.setup-head h2 { margin:0 0 .2rem; }
+.setup-pct { font-family:var(--font-sans); font-weight:700; font-size:1.1rem; color:var(--navy,#0a3161); background:var(--bg-alt,#f4f1e9); border-radius:999px; padding:.25rem .8rem; white-space:nowrap; }
+.setup-bar { height:8px; background:var(--bg-alt,#f4f1e9); border-radius:999px; overflow:hidden; margin:.9rem 0 1.1rem; }
+.setup-bar span { display:block; height:100%; background:var(--gold,#c8a85a); transition:width .3s; }
+.setup-steps { list-style:none; margin:0; padding:0; display:grid; gap:.4rem; }
+.setup-steps li { display:flex; align-items:center; gap:.8rem; padding:.55rem .6rem; border:1px solid var(--rule,#e3ddcf); border-radius:5px; }
+.setup-steps li.done { background:#f6faf6; border-color:#cfe6d2; }
+.setup-check { flex:0 0 auto; width:1.5rem; height:1.5rem; display:grid; place-items:center; border-radius:50%; font-weight:700; background:var(--bg-alt,#f4f1e9); color:var(--muted-l,#8a8e95); }
+.setup-steps li.done .setup-check { background:var(--green,#2f7a3e); color:#fff; }
+.setup-body { flex:1; display:flex; flex-direction:column; }
+.setup-label { font-weight:600; color:var(--navy,#0a3161); text-decoration:none; }
+.setup-label:hover { text-decoration:underline; }
+.setup-steps li.done .setup-label { color:var(--muted,#595d65); }
+.setup-help { font-size:.85rem; color:var(--muted,#595d65); }
+.setup-dismiss { margin-top:1rem; font-size:.8125rem; color:var(--muted,#595d65); }
