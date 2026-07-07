@@ -93,12 +93,20 @@
 
   <div class="form-field">
     <label for="contactName">Contact name</label>
-    <input id="contactName" name="contactName" type="text" value="{{.Form.contactName}}">
+    <input id="contactName" name="contactName" type="text" value="{{.Form.contactName}}"
+           list="member-names" autocomplete="off">
+    <datalist id="member-names">
+      {{range .Members}}<option value="{{.Name}}" data-phone="{{.Phone}}"></option>{{end}}
+    </datalist>
+    <p class="form-help">Start typing to pick a member — their phone fills in
+    automatically. Anyone else's name works too, just type it.</p>
   </div>
 
   <div class="form-field">
     <label for="contactPhone">Contact phone</label>
-    <input id="contactPhone" name="contactPhone" type="tel" value="{{.Form.contactPhone}}">
+    <input id="contactPhone" name="contactPhone" type="tel" value="{{.Form.contactPhone}}"
+           placeholder="(706) 555-1234">
+    <p class="form-help" id="contact-phone-note" role="status"></p>
   </div>
 
   <div class="form-field">
@@ -153,4 +161,5 @@
 
 <script src="/static/js/location-picker.js"></script>
 <script src="/static/js/event-preview.js"></script>
+<script src="/static/js/contact-autofill.js"></script>
 {{end}}

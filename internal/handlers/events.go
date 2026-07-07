@@ -45,11 +45,13 @@ func EventsList(a *app.App) http.HandlerFunc {
 func EventsNewGet(a *app.App) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		locs, _ := a.Store.ListLocations(r.Context())
+		members, _ := a.Store.ListMembers(r.Context())
 		a.Render(w, r, "events_form", "Add an event", map[string]any{
 			"Action":    "/events",
 			"Legend":    "Add an event",
 			"Form":      map[string]string{},
 			"Locations": locs,
+			"Members":   members,
 		})
 	}
 }
@@ -60,9 +62,10 @@ func EventsCreate(a *app.App) http.HandlerFunc {
 		ev, formErr := eventFromForm(a, r, nil)
 		if formErr != "" {
 			locs, _ := a.Store.ListLocations(r.Context())
+			members, _ := a.Store.ListMembers(r.Context())
 			a.Render(w, r, "events_form", "Add an event", map[string]any{
 				"Action": "/events", "Legend": "Add an event",
-				"Error": formErr, "Form": formEcho(r), "Locations": locs,
+				"Error": formErr, "Form": formEcho(r), "Locations": locs, "Members": members,
 			})
 			return
 		}
@@ -100,12 +103,14 @@ func EventsEditGet(a *app.App) http.HandlerFunc {
 			}
 		}
 		locs, _ := a.Store.ListLocations(r.Context())
+		members, _ := a.Store.ListMembers(r.Context())
 		a.Render(w, r, "events_form", "Edit event", map[string]any{
 			"Action":    fmt.Sprintf("/events/%d", ev.ID),
 			"Legend":    "Edit event",
 			"Form":      form,
 			"Event":     ev,
 			"Locations": locs,
+			"Members":   members,
 		})
 	}
 }
@@ -121,9 +126,10 @@ func EventsUpdate(a *app.App) http.HandlerFunc {
 		ev, formErr := eventFromForm(a, r, existing)
 		if formErr != "" {
 			locs, _ := a.Store.ListLocations(r.Context())
+			members, _ := a.Store.ListMembers(r.Context())
 			a.Render(w, r, "events_form", "Edit event", map[string]any{
 				"Action": fmt.Sprintf("/events/%d", existing.ID), "Legend": "Edit event",
-				"Error": formErr, "Form": formEcho(r), "Event": existing, "Locations": locs,
+				"Error": formErr, "Form": formEcho(r), "Event": existing, "Locations": locs, "Members": members,
 			})
 			return
 		}
@@ -302,9 +308,9 @@ func formEcho(r *http.Request) map[string]string {
 
 func rebuildNote(a *app.App) string {
 	if a.Rebuild.Enabled() {
-		return " The website is rebuilding now — changes appear in a couple of minutes."
+		return " Your website will show these changes in a couple of minutes."
 	}
-	return " The website picks this up on its next hourly rebuild."
+	return " Your website will show these changes in the next hour."
 }
 
 func redirectEvents(w http.ResponseWriter, r *http.Request, key, msg string) {
