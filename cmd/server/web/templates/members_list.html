@@ -24,7 +24,7 @@
   <tbody>
     {{range .Members}}
     <tr>
-      <td><a href="/members/{{.ID}}"><strong>{{.Name}}</strong></a></td>
+      <td><a href="/members/{{.ID}}"><strong>{{if .Title}}{{.Title}} {{end}}{{.Name}}</strong></a></td>
       <td><span class="mono">{{.Phone}}</span></td>
       <td><span class="{{badgeClass .OptInStatus}}">{{statusLabel .OptInStatus}}</span></td>
       <td><span class="muted">{{formatDate .CreatedAt}}</span></td>

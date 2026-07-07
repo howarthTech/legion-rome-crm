@@ -1,0 +1,25 @@
+{{define "settings"}}{{template "layout" .}}{{end}}
+{{define "body"}}
+<header class="page-header">
+  <h1>Settings</h1>
+  <p class="muted">Options for how this post's CRM behaves.</p>
+</header>
+
+<form method="POST" action="/settings" class="form">
+  <fieldset class="form-field">
+    <legend>Members</legend>
+    <label class="radio-option">
+      <input type="checkbox" name="useTitles" {{if .UseTitles}}checked{{end}}>
+      <span><strong>Use rank/title in communications</strong> — collect a
+      rank or title for each member (Commander, SGT, Dr., …) and address them
+      with it in text messages ("Hi Commander Hollis" instead of "Hi Albert").
+      Turning this off hides the field and stops using stored titles; nothing
+      is deleted.</span>
+    </label>
+  </fieldset>
+
+  <div class="form-actions">
+    <button type="submit" class="btn btn-primary">Save settings</button>
+  </div>
+</form>
+{{end}}

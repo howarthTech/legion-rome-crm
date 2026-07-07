@@ -82,7 +82,7 @@ func New(d Deps) (*App, error) {
 // TestPagesRenderTheirOwnBody).
 var pageNames = []string{
 	"login", "dashboard", "members_list", "members_new", "member_view", "reminders",
-	"events_list", "events_form", "locations_list",
+	"events_list", "events_form", "locations_list", "settings",
 }
 
 func loadTemplates(tplFS fs.FS) (map[string]*template.Template, error) {

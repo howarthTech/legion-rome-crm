@@ -4,7 +4,7 @@
 <header class="page-header page-header-row">
   <div>
     <p class="breadcrumb"><a href="/members">← Members</a></p>
-    <h1>{{.Name}}</h1>
+    <h1>{{if .Title}}{{.Title}} {{end}}{{.Name}}</h1>
     <p class="muted">
       <span class="mono">{{.Phone}}</span>
       {{if .Email}} · <a href="mailto:{{.Email}}">{{.Email}}</a>{{end}}

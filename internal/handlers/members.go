@@ -53,7 +53,10 @@ func MembersList(a *app.App) http.HandlerFunc {
 // MembersNewGet renders the "add member" form.
 func MembersNewGet(a *app.App) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		a.Render(w, r, "members_new", "Add member", nil)
+		useTitles, _ := a.Store.GetSettingBool(r.Context(), store.SettingUseMemberTitles, true)
+		a.Render(w, r, "members_new", "Add member", map[string]any{
+			"UseTitles": useTitles,
+		})
 	}
 }
 
@@ -68,43 +71,47 @@ func MembersNewPost(a *app.App) http.HandlerFunc {
 			return
 		}
 		name := strings.TrimSpace(r.PostForm.Get("name"))
+		title := strings.TrimSpace(r.PostForm.Get("title"))
 		rawPhone := strings.TrimSpace(r.PostForm.Get("phone"))
 		email := strings.TrimSpace(r.PostForm.Get("email"))
 		notes := strings.TrimSpace(r.PostForm.Get("notes"))
 
+		useTitles, _ := a.Store.GetSettingBool(ctx, store.SettingUseMemberTitles, true)
+		if !useTitles {
+			title = "" // setting off → never store or use a title
+		}
+		echo := func(errMsg string) map[string]any {
+			return map[string]any{
+				"Error": errMsg, "UseTitles": useTitles,
+				"FormName": name, "FormTitle": title, "FormPhone": rawPhone,
+				"FormEmail": email, "FormNotes": notes,
+			}
+		}
+
 		if name == "" {
-			a.Render(w, r, "members_new", "Add member", map[string]any{
-				"Error": "Name is required.",
-				"FormName": name, "FormPhone": rawPhone, "FormEmail": email, "FormNotes": notes,
-			})
+			a.Render(w, r, "members_new", "Add member", echo("Name is required."))
 			return
 		}
 
 		phone, err := app.NormalizePhone(rawPhone)
 		if err != nil {
-			a.Render(w, r, "members_new", "Add member", map[string]any{
-				"Error": "Phone: " + err.Error(),
-				"FormName": name, "FormPhone": rawPhone, "FormEmail": email, "FormNotes": notes,
-			})
+			a.Render(w, r, "members_new", "Add member", echo("Phone: "+err.Error()))
 			return
 		}
 
-		id, err := a.Store.InsertMember(ctx, name, phone, email, notes)
+		id, err := a.Store.InsertMember(ctx, name, title, phone, email, notes)
 		if err != nil {
 			msg := err.Error()
 			if errors.Is(err, store.ErrPhoneExists) {
 				msg = "A member with that phone number is already on the list."
 			}
-			a.Render(w, r, "members_new", "Add member", map[string]any{
-				"Error": msg,
-				"FormName": name, "FormPhone": rawPhone, "FormEmail": email, "FormNotes": notes,
-			})
+			a.Render(w, r, "members_new", "Add member", echo(msg))
 			return
 		}
 
 		// Send the opt-in consent SMS. If this fails, the member row stays —
 		// admin can re-send from the member detail page.
-		_ = sendOptInSMS(ctx, a, id, phone, name)
+		_ = sendOptInSMS(ctx, a, id, phone, name, title)
 
 		http.Redirect(w, r,
 			fmt.Sprintf("/members/%d?ok=%s", id, url.QueryEscape("Member added. Opt-in SMS sent.")),
@@ -150,7 +157,7 @@ func MembersResendOptIn(a *app.App) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
-		if err := sendOptInSMS(r.Context(), a, m.ID, m.Phone, m.Name); err != nil {
+		if err := sendOptInSMS(r.Context(), a, m.ID, m.Phone, m.Name, m.Title); err != nil {
 			http.Redirect(w, r, fmt.Sprintf("/members/%d?err=%s", id, url.QueryEscape(err.Error())), http.StatusSeeOther)
 			return
 		}
@@ -193,11 +200,11 @@ func MembersDelete(a *app.App) http.HandlerFunc {
 
 // sendOptInSMS — fires the consent message and logs it. Used by both new-add
 // and re-send-opt-in flows.
-func sendOptInSMS(ctx context.Context, a *app.App, memberID int64, phone, name string) error {
-	first := firstName(name)
+func sendOptInSMS(ctx context.Context, a *app.App, memberID int64, phone, name, title string) error {
+	useTitles, _ := a.Store.GetSettingBool(ctx, store.SettingUseMemberTitles, true)
 	body := fmt.Sprintf(
 		"%s: Hi %s, you've been added to our event reminder list. Reply YES to confirm and receive SMS reminders about meetings and events. Reply STOP to opt out. Msg & data rates may apply.",
-		a.OrgName, first,
+		a.OrgName, salutation(name, title, useTitles),
 	)
 	res, err := a.Twilio.Send(ctx, phone, body)
 	if err != nil {
@@ -207,10 +214,27 @@ func sendOptInSMS(ctx context.Context, a *app.App, memberID int64, phone, name s
 	return a.Store.LogOutbound(ctx, memberID, phone, body, res.SID, res.Status, "")
 }
 
+// salutation is how communications address a member: with titles enabled and
+// present, rank/title + last name ("Commander Hollis"); otherwise first name.
+func salutation(name, title string, useTitles bool) string {
+	if useTitles && strings.TrimSpace(title) != "" {
+		return strings.TrimSpace(title) + " " + lastName(name)
+	}
+	return firstName(name)
+}
+
 func firstName(full string) string {
 	full = strings.TrimSpace(full)
 	if i := strings.IndexAny(full, " "); i > 0 {
 		return full[:i]
+	}
+	return full
+}
+
+func lastName(full string) string {
+	full = strings.TrimSpace(full)
+	if i := strings.LastIndexAny(full, " "); i >= 0 && i < len(full)-1 {
+		return full[i+1:]
 	}
 	return full
 }

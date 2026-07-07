@@ -22,6 +22,7 @@ const (
 type Member struct {
 	ID                int64
 	Name              string
+	Title             string // rank/title ("Commander", "SGT"); used in communications when enabled
 	Phone             string // E.164 (+17065551234)
 	Email             string
 	OptInStatus       OptInStatus
@@ -42,11 +43,11 @@ var ErrMemberNotFound = errors.New("member not found")
 
 // InsertMember creates a row with status=PENDING and returns the assigned ID.
 // Phone must already be in E.164 form (caller normalizes).
-func (s *Store) InsertMember(ctx context.Context, name, phone, email, notes string) (int64, error) {
+func (s *Store) InsertMember(ctx context.Context, name, title, phone, email, notes string) (int64, error) {
 	now := time.Now().UTC().Format(time.RFC3339)
-	const q = `INSERT INTO members (name, phone, email, opt_in_status, opt_in_requested_at, notes, created_at, updated_at)
-	            VALUES (?, ?, NULLIF(?, ''), 'PENDING', ?, NULLIF(?, ''), ?, ?)`
-	r, err := s.db.ExecContext(ctx, q, name, phone, email, now, notes, now, now)
+	const q = `INSERT INTO members (name, title, phone, email, opt_in_status, opt_in_requested_at, notes, created_at, updated_at)
+	            VALUES (?, ?, ?, NULLIF(?, ''), 'PENDING', ?, NULLIF(?, ''), ?, ?)`
+	r, err := s.db.ExecContext(ctx, q, name, title, phone, email, now, notes, now, now)
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
 			return 0, ErrPhoneExists
@@ -140,7 +141,7 @@ func (s *Store) DeleteMember(ctx context.Context, id int64) error {
 
 // --- query strings & helpers ----------------------------------------------
 
-const memberColumns = `id, name, phone, COALESCE(email, ''), opt_in_status,
+const memberColumns = `id, name, title, phone, COALESCE(email, ''), opt_in_status,
 		opt_in_requested_at, opt_in_confirmed_at, opt_out_at,
 		COALESCE(notes, ''), created_at, updated_at`
 
@@ -178,7 +179,7 @@ func scanMemberFrom(src scanner) (*Member, error) {
 		updatedAt   string
 	)
 	if err := src.Scan(
-		&m.ID, &m.Name, &m.Phone, &m.Email, &m.OptInStatus,
+		&m.ID, &m.Name, &m.Title, &m.Phone, &m.Email, &m.OptInStatus,
 		&reqAt, &confirmedAt, &optOutAt,
 		&m.Notes, &createdAt, &updatedAt,
 	); err != nil {

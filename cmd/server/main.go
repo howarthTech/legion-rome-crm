@@ -124,6 +124,9 @@ func main() {
 	mux.HandleFunc("POST /locations/{id}/delete", authMgr.RequireAuth(handlers.LocationsDelete(a)))
 	mux.HandleFunc("GET /locations/check", authMgr.RequireAuth(handlers.LocationsCheck(a)))
 
+	mux.HandleFunc("GET /settings", authMgr.RequireAuth(handlers.SettingsGet(a)))
+	mux.HandleFunc("POST /settings", authMgr.RequireAuth(handlers.SettingsPost(a)))
+
 	// Public read-only feed: the website builds its event pages from this.
 	// Everything in it is already public on the site; no auth by design.
 	mux.HandleFunc("GET /api/events.json", handlers.EventsAPI(a))
