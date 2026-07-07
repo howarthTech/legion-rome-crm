@@ -41,14 +41,15 @@
     <input id="date" name="date" type="date" required value="{{.Form.date}}">
   </div>
 
-  <div class="form-field">
-    <label for="start">Start time <span class="required">*</span></label>
-    <input id="start" name="start" type="time" required value="{{.Form.start}}">
-  </div>
-
-  <div class="form-field">
-    <label for="end">End time <span class="muted">(optional)</span></label>
-    <input id="end" name="end" type="time" value="{{.Form.end}}">
+  <div class="form-row">
+    <div class="form-field">
+      <label for="start">Start time <span class="required">*</span></label>
+      <input id="start" name="start" type="time" step="300" required value="{{.Form.start}}">
+    </div>
+    <div class="form-field">
+      <label for="end">End time <span class="muted">(optional)</span></label>
+      <input id="end" name="end" type="time" step="300" value="{{.Form.end}}">
+    </div>
   </div>
 
   <div class="form-field">

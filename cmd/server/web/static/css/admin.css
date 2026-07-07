@@ -340,3 +340,15 @@ select { font: inherit; padding: 0.5rem 0.6rem; border: 1px solid #c9c9c9; borde
 .pv-contact { margin: 0; font-size: 0.8125rem; color: var(--muted); }
 .pv-sms-bubble { background: #e8f0e8; border: 1px solid #bcdcc5; border-radius: 12px 12px 12px 3px; padding: 0.7rem 0.9rem; font-size: 0.875rem; line-height: 1.45; max-width: 22rem; }
 .pv-sms-note { font-size: 0.75rem; color: var(--muted); margin: 0.35rem 0 0; }
+
+/* Mobile-friendly date/time fields: native pickers, side-by-side times,
+   full-width tap targets. (Native date/time inputs shrink-wrap by default
+   in some browsers — stretch them to the field width. Keep native
+   appearance: it preserves the calendar/clock icons on desktop and the
+   platform pickers on mobile.) */
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.form input[type="date"], .form input[type="time"], .form select {
+  width: 100%;
+  min-height: 44px;               /* comfortable touch target */
+}
+.form select { padding: 0.625rem 0.75rem; }
