@@ -320,3 +320,23 @@ fieldset.form-field legend { font-weight: 600; padding: 0 0.35rem; }
 .new-location-fields { border-left: 3px solid var(--gold, #c9a445); padding-left: 1rem; margin: 0.5rem 0 1rem; }
 #check-address-result { font-size: 0.875rem; color: var(--muted); margin-left: 0.4rem; }
 select { font: inherit; padding: 0.5rem 0.6rem; border: 1px solid #c9c9c9; border-radius: 6px; background: #fff; max-width: 100%; }
+
+/* Live preview panel (events form) */
+.form-with-preview { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 26rem); gap: 2rem; align-items: start; }
+@media (max-width: 900px) { .form-with-preview { grid-template-columns: 1fr; } }
+.event-preview { position: sticky; top: 1rem; }
+.preview-heading { font-size: 1rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 0.75rem; }
+.preview-sub { font-size: 0.8125rem; color: var(--muted); margin: 1rem 0 0.4rem; }
+.pv-card { display: flex; gap: 0.9rem; background: #fff; border: 1px solid #d9d4c8; border-left: 4px solid var(--navy, #1a2c50); border-radius: 8px; padding: 0.9rem; }
+.pv-date { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 3.4rem; background: var(--navy, #1a2c50); color: #fff; border-radius: 6px; padding: 0.4rem 0.5rem; line-height: 1.15; }
+.pv-month { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: #e3bf5f; }
+.pv-day { font-size: 1.4rem; font-weight: 700; }
+.pv-year { font-size: 0.65rem; opacity: 0.75; }
+.pv-body { min-width: 0; }
+.pv-type { display: inline-block; margin: 0 0 0.25rem; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--navy, #1a2c50); border: 1px solid var(--navy, #1a2c50); border-radius: 999px; padding: 0.05rem 0.5rem; }
+.pv-title { margin: 0 0 0.2rem; font-size: 1.05rem; color: var(--navy, #1a2c50); }
+.pv-meta { margin: 0 0 0.3rem; font-size: 0.8125rem; color: var(--muted); }
+.pv-desc { margin: 0 0 0.3rem; font-size: 0.875rem; }
+.pv-contact { margin: 0; font-size: 0.8125rem; color: var(--muted); }
+.pv-sms-bubble { background: #e8f0e8; border: 1px solid #bcdcc5; border-radius: 12px 12px 12px 3px; padding: 0.7rem 0.9rem; font-size: 0.875rem; line-height: 1.45; max-width: 22rem; }
+.pv-sms-note { font-size: 0.75rem; color: var(--muted); margin: 0.35rem 0 0; }

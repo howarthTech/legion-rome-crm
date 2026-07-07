@@ -12,6 +12,7 @@
 
 {{if .Error}}<div class="flash flash-error">{{.Error}}</div>{{end}}
 
+<div class="form-with-preview">
 <form method="POST" action="{{.Action}}" class="form">
   <div class="form-field">
     <label for="title">Event title <span class="required">*</span></label>
@@ -52,13 +53,13 @@
 
   <div class="form-field">
     <label for="locationChoice">Location</label>
-    <select id="locationChoice" name="locationChoice">
+    <select id="locationChoice" name="locationChoice"{{with .Event}} data-current="{{.Location}}"{{end}}>
       {{if .Event}}
       <option value="keep" {{if ne .Form.locationChoice "new"}}selected{{end}}>Current: {{.Event.Location}}</option>
       {{end}}
       <option value="none" {{if and (not .Event) (eq .Form.locationChoice "")}}selected{{end}}>— No location —</option>
       {{range .Locations}}
-      <option value="loc:{{.ID}}" {{if eq $.Form.locationChoice (printf "loc:%d" .ID)}}selected{{end}}>{{.Name}} ({{.Address}})</option>
+      <option value="loc:{{.ID}}" data-display="{{.Display}}" {{if eq $.Form.locationChoice (printf "loc:%d" .ID)}}selected{{end}}>{{.Name}} ({{.Address}})</option>
       {{end}}
       <option value="new" {{if eq .Form.locationChoice "new"}}selected{{end}}>+ Add a new location…</option>
     </select>
@@ -124,5 +125,31 @@
   </div>
 </form>
 
+<aside class="event-preview" id="event-preview" data-org="{{.OrgName}}" hidden aria-label="Live preview">
+  <h2 class="preview-heading">Live preview</h2>
+
+  <p class="preview-sub">On the website:</p>
+  <div class="pv-card">
+    <div class="pv-date" aria-hidden="true">
+      <span class="pv-month" id="pv-month">—</span>
+      <span class="pv-day" id="pv-day">–</span>
+      <span class="pv-year" id="pv-year"></span>
+    </div>
+    <div class="pv-body">
+      <p class="pv-type" id="pv-type" hidden>Community Event</p>
+      <h3 class="pv-title" id="pv-title">Event title</h3>
+      <p class="pv-meta" id="pv-meta"></p>
+      <p class="pv-desc" id="pv-desc"></p>
+      <p class="pv-contact" id="pv-contact"></p>
+    </div>
+  </div>
+
+  <p class="preview-sub" id="pv-sms-label">Text reminder (sent from the reminder screen):</p>
+  <div class="pv-sms-bubble" id="pv-sms"></div>
+  <p class="pv-sms-note" id="pv-sms-note"></p>
+</aside>
+</div><!-- /.form-with-preview -->
+
 <script src="/static/js/location-picker.js"></script>
+<script src="/static/js/event-preview.js"></script>
 {{end}}
