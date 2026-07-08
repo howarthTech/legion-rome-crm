@@ -418,3 +418,15 @@ dialog#roster-edit::backdrop { background:rgba(15,27,49,.4); }
 .photo-caption input { flex:1; min-width:0; padding:.4rem .5rem; border:1px solid #c9c9c9; border-radius:5px; font:inherit; font-size:.85rem; }
 .photo-actions { display:flex; gap:.4rem; padding:0 .6rem .6rem; }
 .photo-actions form { display:inline; }
+
+/* Member dues */
+.dues-section { margin-top:2rem; }
+.dues-head { display:flex; align-items:center; gap:.75rem; margin-bottom:1rem; }
+.dues-head h2 { margin:0; }
+.dues-record { background:#fff; border:1px solid var(--rule,#e3ddcf); border-radius:6px; padding:1.1rem 1.2rem; }
+.dues-record h3 { margin:0 0 .8rem; font-size:1.05rem; color:var(--navy,#0a3161); }
+.dues-fields { display:grid; grid-template-columns:repeat(auto-fit,minmax(11rem,1fr)); gap:.75rem 1rem; }
+.dues-record select, .dues-record input { min-height:44px; padding:.5rem .6rem; border:1px solid #c9c9c9; border-radius:6px; font:inherit; width:100%; }
+.dues-markdue { display:flex; align-items:center; gap:.6rem; margin-top:.9rem; flex-wrap:wrap; }
+.dues-markdue .muted { font-size:.85rem; }
+.dues-section h3 { margin:1.5rem 0 .6rem; font-size:1.05rem; color:var(--navy,#0a3161); }

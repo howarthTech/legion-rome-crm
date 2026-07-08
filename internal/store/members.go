@@ -30,6 +30,8 @@ type Member struct {
 	OptInConfirmedAt  sql.NullTime
 	OptOutAt          sql.NullTime
 	Notes             string
+	DuesStatus        string // 'PAID' or 'DUE'
+	DuesPaidThrough   string // membership year the member is paid through, e.g. "2026" (optional)
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
 }
@@ -167,7 +169,8 @@ func (s *Store) DeleteMember(ctx context.Context, id int64) error {
 
 const memberColumns = `id, name, title, phone, COALESCE(email, ''), opt_in_status,
 		opt_in_requested_at, opt_in_confirmed_at, opt_out_at,
-		COALESCE(notes, ''), created_at, updated_at`
+		COALESCE(notes, ''), COALESCE(dues_status, 'DUE'), COALESCE(dues_paid_through, ''),
+		created_at, updated_at`
 
 var (
 	memberSelectByID    = `SELECT ` + memberColumns + ` FROM members WHERE id = ?`
@@ -205,7 +208,7 @@ func scanMemberFrom(src scanner) (*Member, error) {
 	if err := src.Scan(
 		&m.ID, &m.Name, &m.Title, &m.Phone, &m.Email, &m.OptInStatus,
 		&reqAt, &confirmedAt, &optOutAt,
-		&m.Notes, &createdAt, &updatedAt,
+		&m.Notes, &m.DuesStatus, &m.DuesPaidThrough, &createdAt, &updatedAt,
 	); err != nil {
 		return nil, err
 	}

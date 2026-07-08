@@ -57,6 +57,86 @@
   </form>
 </div>
 
+<section class="dues-section">
+  <div class="dues-head">
+    <h2>Dues</h2>
+    {{if eq .DuesStatus "PAID"}}
+      <span class="badge badge-ok">Paid up{{if .DuesPaidThrough}} · {{.DuesPaidThrough}}{{end}}</span>
+    {{else}}
+      <span class="badge badge-pending">Dues due</span>
+    {{end}}
+  </div>
+
+  <div class="dues-grid">
+    <div class="dues-record">
+      <h3>Record a payment</h3>
+      <form method="POST" action="/members/{{.ID}}/dues" class="form">
+        <div class="dues-fields">
+          <div class="form-field">
+            <label for="paid_on">Date paid</label>
+            <input id="paid_on" name="paid_on" type="date" value="{{$.Today}}" required>
+          </div>
+          <div class="form-field">
+            <label for="method">How paid</label>
+            <select id="method" name="method">
+              {{range duesMethods}}<option value="{{.}}">{{.}}</option>{{end}}
+            </select>
+          </div>
+          <div class="form-field">
+            <label for="amount">Amount <span class="muted">(optional)</span></label>
+            <input id="amount" name="amount" type="text" inputmode="decimal" placeholder="$30.00">
+          </div>
+          <div class="form-field">
+            <label for="membership_year">Membership year <span class="muted">(optional)</span></label>
+            <input id="membership_year" name="membership_year" type="number" min="1919" max="2100"
+                   step="1" value="{{$.CurrentYear}}" placeholder="{{$.CurrentYear}}">
+          </div>
+        </div>
+        <div class="form-field">
+          <label for="dues_notes">Notes <span class="muted">(optional)</span></label>
+          <input id="dues_notes" name="notes" type="text" placeholder="e.g. check #1043, paid at the hall">
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Record payment &amp; mark paid</button>
+        </div>
+      </form>
+      {{if eq .DuesStatus "PAID"}}
+      <form method="POST" action="/members/{{.ID}}/dues/mark-due" class="dues-markdue"
+            onsubmit="return confirm('Mark this member as owing dues again?');">
+        <button type="submit" class="btn btn-secondary btn-sm">Mark dues due</button>
+        <span class="muted">Use at the start of a new membership year.</span>
+      </form>
+      {{end}}
+    </div>
+  </div>
+
+  {{if $.DuesPayments}}
+  <h3>Payment history</h3>
+  <table class="table">
+    <thead><tr><th>Date</th><th>How</th><th>Amount</th><th>Year</th><th>Notes</th><th></th></tr></thead>
+    <tbody>
+      {{range $.DuesPayments}}
+      <tr>
+        <td class="nowrap">{{.PaidOn}}</td>
+        <td>{{if .Method}}{{.Method}}{{else}}<span class="muted">—</span>{{end}}</td>
+        <td class="nowrap">{{with centsUSD .AmountCents}}{{.}}{{else}}<span class="muted">—</span>{{end}}</td>
+        <td>{{if .MembershipYear}}{{.MembershipYear}}{{else}}<span class="muted">—</span>{{end}}</td>
+        <td>{{if .Notes}}{{.Notes}}{{else}}<span class="muted">—</span>{{end}}</td>
+        <td class="table-actions">
+          <form method="POST" action="/members/{{$.Member.ID}}/dues/{{.ID}}/delete" class="inline-form"
+                onsubmit="return confirm('Remove this payment record?');">
+            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+          </form>
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  {{else}}
+  <p class="muted">No dues payments recorded yet.</p>
+  {{end}}
+</section>
+
 <section class="messages-section">
   <h2>Message history</h2>
   {{if $.Messages}}

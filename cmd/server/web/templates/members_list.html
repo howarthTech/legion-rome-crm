@@ -17,6 +17,7 @@
       <th>Name</th>
       <th>Phone</th>
       <th>Status</th>
+      <th>Dues</th>
       <th>Added</th>
       <th></th>
     </tr>
@@ -27,6 +28,7 @@
       <td><a href="/members/{{.ID}}"><strong>{{if .Title}}{{.Title}} {{end}}{{.Name}}</strong></a></td>
       <td><span class="mono">{{.Phone}}</span></td>
       <td><span class="{{badgeClass .OptInStatus}}">{{statusLabel .OptInStatus}}</span></td>
+      <td>{{if eq .DuesStatus "PAID"}}<span class="badge badge-ok">Paid up</span>{{else}}<span class="badge badge-pending">Due</span>{{end}}</td>
       <td><span class="muted">{{formatDate .CreatedAt}}</span></td>
       <td class="nowrap"><a href="/members/{{.ID}}">View</a> · <a href="/members/{{.ID}}/edit">Edit</a></td>
     </tr>

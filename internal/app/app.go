@@ -4,6 +4,7 @@
 package app
 
 import (
+	"database/sql"
 	"embed"
 	"errors"
 	"fmt"
@@ -112,11 +113,32 @@ var OfficerTitles = []string{
 	"Legion Riders Director",
 }
 
+// DuesMethods are the payment methods offered when recording a dues payment.
+// These populate the method <select>; "Other" plus the notes field cover
+// anything unusual.
+var DuesMethods = []string{
+	"Cash",
+	"Check",
+	"Credit or debit card",
+	"Money order",
+	"Online",
+	"Other",
+}
+
 func loadTemplates(tplFS fs.FS) (map[string]*template.Template, error) {
 	funcs := template.FuncMap{
 		// officerTitles exposes the suggestion list to templates for
 		// <datalist> options.
 		"officerTitles": func() []string { return OfficerTitles },
+		// duesMethods exposes the payment-method list for the dues <select>.
+		"duesMethods": func() []string { return DuesMethods },
+		// centsUSD renders an optional cents amount as "$12.00"; blank if unset.
+		"centsUSD": func(n sql.NullInt64) string {
+			if !n.Valid {
+				return ""
+			}
+			return fmt.Sprintf("$%.2f", float64(n.Int64)/100)
+		},
 		// dict builds a map from alternating key/value args, for passing
 		// multiple values to a nested template ({{template "x" dict "K" v}}).
 		"dict": func(pairs ...any) (map[string]any, error) {

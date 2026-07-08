@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/howarthTech/legion-rome-crm/internal/app"
 	"github.com/howarthTech/legion-rome-crm/internal/store"
@@ -258,9 +259,14 @@ func MembersView(a *app.App) http.HandlerFunc {
 			return
 		}
 		msgs, _ := a.Store.MessagesForMember(r.Context(), id, 50)
+		payments, _ := a.Store.ListDuesPayments(r.Context(), id)
+		now := time.Now()
 		a.Render(w, r, "member_view", m.Name, map[string]any{
-			"Member":   m,
-			"Messages": msgs,
+			"Member":       m,
+			"Messages":     msgs,
+			"DuesPayments": payments,
+			"Today":        now.Format("2006-01-02"),
+			"CurrentYear":  now.Format("2006"),
 		})
 	}
 }
