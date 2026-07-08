@@ -293,7 +293,7 @@ func GalleryAPI(a *app.App) http.HandlerFunc {
 			http.Error(w, "internal error", http.StatusInternalServerError)
 			return
 		}
-		base := strings.TrimRight(a.PublicURL, "/")
+		base := publicBase(a, r)
 		out := struct {
 			Generated string     `json:"generated"`
 			Albums    []apiAlbum `json:"albums"`
@@ -333,6 +333,32 @@ func photoAndAlbum(a *app.App, r *http.Request) (photoID, albumID int64, ok bool
 		return 0, 0, false
 	}
 	return p.ID, p.AlbumID, true
+}
+
+// publicBase returns the scheme+host the caller reached us on, so photo URLs in
+// the feed are same-origin as the feed itself. Behind Caddy, TLS is terminated
+// at the proxy and the request arrives over plain HTTP on loopback, so we trust
+// the X-Forwarded-* headers Caddy sets. Falls back to the configured PublicURL
+// for direct (non-proxied) access. This matters because the site may fetch the
+// feed on a different hostname than PublicURL (e.g. the preview host before the
+// production DNS cutover) — the photos must come from that same reachable host.
+func publicBase(a *app.App, r *http.Request) string {
+	host := r.Header.Get("X-Forwarded-Host")
+	if host == "" {
+		host = r.Host
+	}
+	if host == "" {
+		return strings.TrimRight(a.PublicURL, "/")
+	}
+	scheme := r.Header.Get("X-Forwarded-Proto")
+	if scheme == "" {
+		if r.TLS != nil {
+			scheme = "https"
+		} else {
+			scheme = "http"
+		}
+	}
+	return scheme + "://" + host
 }
 
 func randHex(n int) string {
