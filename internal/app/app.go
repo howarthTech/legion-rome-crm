@@ -33,6 +33,7 @@ type App struct {
 	StaticFS   http.Handler
 	PublicURL  string // canonical public URL (used for Twilio webhook signature verification)
 	OrgName    string // post name — used in SMS bodies and page chrome
+	MediaDir   string // where uploaded gallery photos are stored on disk
 }
 
 // Deps bundles the App's dependencies so New doesn't grow an unwieldy
@@ -48,6 +49,7 @@ type Deps struct {
 	StaticFS  embed.FS
 	PublicURL string
 	OrgName   string
+	MediaDir  string
 }
 
 // New builds an App. Caller is responsible for closing d.Store.
@@ -71,6 +73,7 @@ func New(d Deps) (*App, error) {
 		StaticFS:  http.FileServer(http.FS(staticSub)),
 		PublicURL: strings.TrimRight(d.PublicURL, "/"),
 		OrgName:   d.OrgName,
+		MediaDir:  d.MediaDir,
 	}, nil
 }
 
@@ -84,6 +87,7 @@ var pageNames = []string{
 	"login", "dashboard", "members_list", "members_new", "member_view", "reminders",
 	"events_list", "events_form", "locations_list", "settings",
 	"content_hub", "content_info", "content_roster", "content_pages", "content_page",
+	"gallery_albums", "gallery_album",
 }
 
 // OfficerTitles are common American Legion post (and family) titles offered as

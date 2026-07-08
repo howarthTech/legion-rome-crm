@@ -1,0 +1,45 @@
+{{define "gallery_albums"}}{{template "layout" .}}{{end}}
+{{define "body"}}
+<header class="page-header">
+  <p class="breadcrumb"><a href="/content">← Website content</a></p>
+  <h1>Photo gallery</h1>
+  <p class="muted">Group photos into albums. Each album shows on your website
+    once it has photos.</p>
+</header>
+
+<section class="card">
+  <h2>New album</h2>
+  <form method="post" action="/content/gallery" class="stack">
+    <label>Album title
+      <input type="text" name="title" required placeholder="e.g. Memorial Day 2026">
+    </label>
+    <label>Date <span class="muted">(optional)</span>
+      <input type="date" name="date">
+    </label>
+    <label>Description <span class="muted">(optional)</span>
+      <textarea name="description" rows="2" placeholder="A sentence about this album."></textarea>
+    </label>
+    <div><button type="submit" class="btn btn-primary">Create album</button></div>
+  </form>
+</section>
+
+{{if .Albums}}
+<table class="table">
+  <thead><tr><th>Album</th><th>Date</th><th>Photos</th><th></th></tr></thead>
+  <tbody>
+    {{range .Albums}}
+    <tr>
+      <td><strong>{{.Title}}</strong>
+        {{if .Description}}<br><span class="muted" style="font-size:.85rem">{{.Description}}</span>{{end}}
+      </td>
+      <td>{{if .Date}}{{.Date}}{{else}}<span class="muted">—</span>{{end}}</td>
+      <td>{{if .PhotoCount}}{{.PhotoCount}}{{else}}<span class="badge badge-pending">Empty</span>{{end}}</td>
+      <td class="table-actions"><a href="/content/gallery/{{.ID}}" class="btn btn-secondary btn-sm">Open</a></td>
+    </tr>
+    {{end}}
+  </tbody>
+</table>
+{{else}}
+<p class="muted">No albums yet. Create one above to start adding photos.</p>
+{{end}}
+{{end}}

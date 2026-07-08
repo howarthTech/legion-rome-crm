@@ -402,3 +402,19 @@ dialog#roster-edit::backdrop { background:rgba(15,27,49,.4); }
 .setup-mini { font-size:.78rem; color:var(--muted,#595d65); text-decoration:underline; }
 .setup-mini:hover { color:var(--navy,#0a3161); }
 .setup-dismiss:hover { color:var(--navy,#0a3161); }
+
+/* Photo gallery editor */
+.card { background:#fff; border:1px solid var(--rule,#e3ddcf); border-radius:6px; padding:1.25rem 1.4rem; margin-bottom:1.5rem; }
+.card h2 { margin:0 0 .9rem; font-size:1.15rem; color:var(--navy,#0a3161); }
+.stack { display:flex; flex-direction:column; gap:.9rem; }
+.stack label { display:flex; flex-direction:column; gap:.3rem; font-weight:600; color:var(--navy,#0a3161); font-size:.95rem; }
+.stack input[type=text], .stack input[type=date], .stack textarea, .stack input[type=file] {
+  min-height:44px; padding:.5rem .6rem; border:1px solid #c9c9c9; border-radius:6px; font:inherit; width:100%; font-weight:400; }
+.stack textarea { min-height:auto; }
+.photo-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(13rem,1fr)); gap:1rem; margin:1rem 0; }
+.photo-card { margin:0; border:1px solid var(--rule,#e3ddcf); border-radius:6px; overflow:hidden; background:#fff; display:flex; flex-direction:column; }
+.photo-card img { width:100%; aspect-ratio:4/3; object-fit:cover; display:block; background:var(--bg-alt,#f4f1e9); }
+.photo-caption { display:flex; gap:.4rem; padding:.6rem; }
+.photo-caption input { flex:1; min-width:0; padding:.4rem .5rem; border:1px solid #c9c9c9; border-radius:5px; font:inherit; font-size:.85rem; }
+.photo-actions { display:flex; gap:.4rem; padding:0 .6rem .6rem; }
+.photo-actions form { display:inline; }

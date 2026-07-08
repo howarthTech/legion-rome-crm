@@ -55,6 +55,11 @@ func main() {
 	}
 	defer st.Close()
 
+	// --- Media storage ---------------------------------------------------
+	if err := os.MkdirAll(cfg.MediaDir, 0o755); err != nil {
+		log.Fatalf("create media dir %s: %v", cfg.MediaDir, err)
+	}
+
 	// --- Twilio ----------------------------------------------------------
 	twilio := sms.NewClient(cfg.TwilioAccountSID, cfg.TwilioAuthToken, cfg.TwilioFromNumber)
 	if twilio.DryRun {
@@ -86,6 +91,7 @@ func main() {
 		StaticFS:  staticFS,
 		PublicURL: cfg.PublicURL,
 		OrgName:   cfg.OrgName,
+		MediaDir:  cfg.MediaDir,
 	})
 	if err != nil {
 		log.Fatalf("app: %v", err)
@@ -143,10 +149,27 @@ func main() {
 	mux.HandleFunc("GET /content/pages/{slug}", authMgr.RequireAuth(handlers.ContentPageEditGet(a)))
 	mux.HandleFunc("POST /content/pages/{slug}", authMgr.RequireAuth(handlers.ContentPageSave(a)))
 
+	// Photo gallery: albums + uploads. Photo routes use a /photo/{pid} prefix so
+	// they never collide with the album /{id} route (Go's mux prefers the more
+	// specific, longer pattern regardless).
+	mux.HandleFunc("GET /content/gallery", authMgr.RequireAuth(handlers.GalleryAlbums(a)))
+	mux.HandleFunc("POST /content/gallery", authMgr.RequireAuth(handlers.GalleryAlbumCreate(a)))
+	mux.HandleFunc("GET /content/gallery/{id}", authMgr.RequireAuth(handlers.GalleryAlbum(a)))
+	mux.HandleFunc("POST /content/gallery/{id}", authMgr.RequireAuth(handlers.GalleryAlbumUpdate(a)))
+	mux.HandleFunc("POST /content/gallery/{id}/delete", authMgr.RequireAuth(handlers.GalleryAlbumDelete(a)))
+	mux.HandleFunc("POST /content/gallery/{id}/upload", authMgr.RequireAuth(handlers.GalleryUpload(a)))
+	mux.HandleFunc("POST /content/gallery/photo/{pid}/caption", authMgr.RequireAuth(handlers.GalleryPhotoCaption(a)))
+	mux.HandleFunc("POST /content/gallery/photo/{pid}/delete", authMgr.RequireAuth(handlers.GalleryPhotoDelete(a)))
+	mux.HandleFunc("POST /content/gallery/photo/{pid}/move", authMgr.RequireAuth(handlers.GalleryPhotoMove(a)))
+
 	// Public read-only feeds: the website builds from these; all content is
 	// already public on the site, so no auth by design.
 	mux.HandleFunc("GET /api/events.json", handlers.EventsAPI(a))
 	mux.HandleFunc("GET /api/site.json", handlers.SiteAPI(a))
+	mux.HandleFunc("GET /api/gallery.json", handlers.GalleryAPI(a))
+
+	// Uploaded photos. Public: they're published on the site.
+	mux.HandleFunc("GET /media/{name}", handlers.MediaServe(a))
 
 	// Healthcheck for the deploy script's polling
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, _ *http.Request) {
@@ -210,6 +233,7 @@ type config struct {
 	TwilioFromNumber    string
 	GitHubDispatchToken string
 	GitHubDispatchRepo  string
+	MediaDir            string
 }
 
 func loadConfig() config {
@@ -227,6 +251,7 @@ func loadConfig() config {
 		TwilioFromNumber:    os.Getenv("TWILIO_FROM_NUMBER"),
 		GitHubDispatchToken: os.Getenv("GITHUB_DISPATCH_TOKEN"),
 		GitHubDispatchRepo:  os.Getenv("GITHUB_DISPATCH_REPO"),
+		MediaDir:            envOr("MEDIA_DIR", "./data/media"),
 	}
 	return c
 }

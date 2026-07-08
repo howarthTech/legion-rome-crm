@@ -38,7 +38,8 @@ USER app
 # internal port is always 8081 — only the host-side published port varies per
 # client. DB lives on the mounted volume.
 ENV LISTEN_ADDR=0.0.0.0:8081 \
-    DB_PATH=/data/crm.db
+    DB_PATH=/data/crm.db \
+    MEDIA_DIR=/data/media
 
 EXPOSE 8081
 

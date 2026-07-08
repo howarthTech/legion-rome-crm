@@ -1,0 +1,62 @@
+{{define "gallery_album"}}{{template "layout" .}}{{end}}
+{{define "body"}}
+<header class="page-header">
+  <p class="breadcrumb"><a href="/content/gallery">← Photo gallery</a></p>
+  <h1>{{.Album.Title}}</h1>
+  <p class="muted">Add photos, caption them, and put them in the order you want.</p>
+</header>
+
+<section class="card">
+  <h2>Add photos</h2>
+  <form method="post" action="/content/gallery/{{.Album.ID}}/upload" enctype="multipart/form-data" class="stack">
+    <label>Choose photos <span class="muted">(JPEG, PNG, WebP, or GIF — up to 12 MB each)</span>
+      <input type="file" name="photos" accept="image/*" multiple required>
+    </label>
+    <div><button type="submit" class="btn btn-primary">Upload</button></div>
+  </form>
+</section>
+
+{{if .Photos}}
+<section class="photo-grid">
+  {{$album := .Album}}
+  {{range .Photos}}
+  <figure class="photo-card">
+    <img src="/media/{{.Filename}}" alt="{{.Caption}}" loading="lazy">
+    <form method="post" action="/content/gallery/photo/{{.ID}}/caption" class="photo-caption">
+      <input type="text" name="caption" value="{{.Caption}}" placeholder="Add a caption…">
+      <button type="submit" class="btn btn-secondary btn-sm">Save</button>
+    </form>
+    <div class="photo-actions">
+      <form method="post" action="/content/gallery/photo/{{.ID}}/move?dir=up"><button class="btn btn-secondary btn-sm" title="Move earlier">↑</button></form>
+      <form method="post" action="/content/gallery/photo/{{.ID}}/move?dir=down"><button class="btn btn-secondary btn-sm" title="Move later">↓</button></form>
+      <form method="post" action="/content/gallery/photo/{{.ID}}/delete" onsubmit="return confirm('Delete this photo?')"><button class="btn btn-danger btn-sm">Delete</button></form>
+    </div>
+  </figure>
+  {{end}}
+</section>
+{{else}}
+<p class="muted">No photos in this album yet.</p>
+{{end}}
+
+<section class="card" style="margin-top:2rem">
+  <h2>Album details</h2>
+  <form method="post" action="/content/gallery/{{.Album.ID}}" class="stack">
+    <label>Title
+      <input type="text" name="title" value="{{.Album.Title}}" required>
+    </label>
+    <label>Date <span class="muted">(optional)</span>
+      <input type="date" name="date" value="{{.Album.Date}}">
+    </label>
+    <label>Description <span class="muted">(optional)</span>
+      <textarea name="description" rows="2">{{.Album.Description}}</textarea>
+    </label>
+    <div><button type="submit" class="btn btn-primary">Save details</button></div>
+  </form>
+</section>
+
+<section style="margin-top:1.5rem">
+  <form method="post" action="/content/gallery/{{.Album.ID}}/delete" onsubmit="return confirm('Delete this album and all its photos? This cannot be undone.')">
+    <button type="submit" class="btn btn-danger">Delete album</button>
+  </form>
+</section>
+{{end}}
