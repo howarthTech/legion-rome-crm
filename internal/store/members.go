@@ -57,6 +57,30 @@ func (s *Store) InsertMember(ctx context.Context, name, title, phone, email, not
 	return r.LastInsertId()
 }
 
+// UpdateMember rewrites a member's editable details (name, title, phone,
+// email, notes). Opt-in status and its timestamps are deliberately left
+// untouched — correcting a member's details is not a consent event. Phone must
+// already be in E.164 form (caller normalizes). Returns ErrPhoneExists if the
+// new phone collides with another member, or ErrMemberNotFound if id is unknown.
+func (s *Store) UpdateMember(ctx context.Context, id int64, name, title, phone, email, notes string) error {
+	now := time.Now().UTC().Format(time.RFC3339)
+	const q = `UPDATE members
+	           SET name = ?, title = ?, phone = ?, email = NULLIF(?, ''), notes = NULLIF(?, ''), updated_at = ?
+	           WHERE id = ?`
+	r, err := s.db.ExecContext(ctx, q, name, title, phone, email, notes, now, id)
+	if err != nil {
+		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
+			return ErrPhoneExists
+		}
+		return fmt.Errorf("update member: %w", err)
+	}
+	n, _ := r.RowsAffected()
+	if n == 0 {
+		return ErrMemberNotFound
+	}
+	return nil
+}
+
 // GetMember by ID. Returns ErrMemberNotFound if no row.
 func (s *Store) GetMember(ctx context.Context, id int64) (*Member, error) {
 	return s.scanMember(s.db.QueryRowContext(ctx, memberSelectByID, id))

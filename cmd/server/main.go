@@ -116,6 +116,8 @@ func main() {
 	mux.HandleFunc("GET /members", authMgr.RequireAuth(handlers.MembersList(a)))
 	mux.HandleFunc("GET /members/new", authMgr.RequireAuth(handlers.MembersNewGet(a)))
 	mux.HandleFunc("POST /members", authMgr.RequireAuth(handlers.MembersNewPost(a)))
+	mux.HandleFunc("GET /members/{id}/edit", authMgr.RequireAuth(handlers.MembersEditGet(a)))
+	mux.HandleFunc("POST /members/{id}/edit", authMgr.RequireAuth(handlers.MembersEditPost(a)))
 	mux.HandleFunc("GET /members/{id}", authMgr.RequireAuth(handlers.MembersView(a)))
 	mux.HandleFunc("POST /members/{id}/resend-opt-in", authMgr.RequireAuth(handlers.MembersResendOptIn(a)))
 	mux.HandleFunc("POST /members/{id}/opt-out", authMgr.RequireAuth(handlers.MembersOptOut(a)))

@@ -28,7 +28,7 @@
       <td><span class="mono">{{.Phone}}</span></td>
       <td><span class="{{badgeClass .OptInStatus}}">{{statusLabel .OptInStatus}}</span></td>
       <td><span class="muted">{{formatDate .CreatedAt}}</span></td>
-      <td><a href="/members/{{.ID}}">View →</a></td>
+      <td class="nowrap"><a href="/members/{{.ID}}">View</a> · <a href="/members/{{.ID}}/edit">Edit</a></td>
     </tr>
     {{end}}
   </tbody>

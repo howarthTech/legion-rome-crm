@@ -39,6 +39,7 @@
 </dl>
 
 <div class="action-row">
+  <a href="/members/{{.ID}}/edit" class="btn btn-secondary">Edit details</a>
   {{if eq (printf "%v" .OptInStatus) "PENDING"}}
   <form method="POST" action="/members/{{.ID}}/resend-opt-in" class="inline-form">
     <button type="submit" class="btn btn-secondary">Resend opt-in SMS</button>

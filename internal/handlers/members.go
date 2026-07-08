@@ -151,6 +151,95 @@ func MembersNewPost(a *app.App) http.HandlerFunc {
 	}
 }
 
+// MembersEditGet renders the edit form pre-filled with the member's details.
+func MembersEditGet(a *app.App) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+		if err != nil {
+			http.Error(w, "bad id", http.StatusBadRequest)
+			return
+		}
+		m, err := a.Store.GetMember(r.Context(), id)
+		if err != nil {
+			if errors.Is(err, store.ErrMemberNotFound) {
+				http.NotFound(w, r)
+				return
+			}
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		useTitles, _ := a.Store.GetSettingBool(r.Context(), store.SettingUseMemberTitles, true)
+		a.Render(w, r, "members_edit", "Edit "+m.Name, map[string]any{
+			"UseTitles": useTitles,
+			"MemberID":  m.ID,
+			"FormName":  m.Name, "FormTitle": m.Title, "FormPhone": displayPhone(m.Phone),
+			"FormEmail": m.Email, "FormNotes": m.Notes,
+		})
+	}
+}
+
+// MembersEditPost validates and saves edited member details. Opt-in status is
+// untouched (see store.UpdateMember) — this is a details edit, not a consent
+// change. Correcting a typo'd phone keeps the member's consent; if the number
+// belongs to a different person, the admin should remove and re-add so they get
+// a fresh opt-in (the form says so).
+func MembersEditPost(a *app.App) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		id, err := strconv.ParseInt(r.PathValue("id"), 10, 64)
+		if err != nil {
+			http.Error(w, "bad id", http.StatusBadRequest)
+			return
+		}
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, "bad form", http.StatusBadRequest)
+			return
+		}
+		name := strings.TrimSpace(r.PostForm.Get("name"))
+		title := strings.TrimSpace(r.PostForm.Get("title"))
+		rawPhone := strings.TrimSpace(r.PostForm.Get("phone"))
+		email := strings.TrimSpace(r.PostForm.Get("email"))
+		notes := strings.TrimSpace(r.PostForm.Get("notes"))
+
+		useTitles, _ := a.Store.GetSettingBool(ctx, store.SettingUseMemberTitles, true)
+		if !useTitles {
+			title = "" // setting off → never store or use a title
+		}
+		echo := func(errMsg string) map[string]any {
+			return map[string]any{
+				"Error": errMsg, "UseTitles": useTitles, "MemberID": id,
+				"FormName": name, "FormTitle": title, "FormPhone": rawPhone,
+				"FormEmail": email, "FormNotes": notes,
+			}
+		}
+
+		if name == "" {
+			a.Render(w, r, "members_edit", "Edit member", echo("Name is required."))
+			return
+		}
+		phone, err := app.NormalizePhone(rawPhone)
+		if err != nil {
+			a.Render(w, r, "members_edit", "Edit member", echo("Phone: "+err.Error()))
+			return
+		}
+
+		if err := a.Store.UpdateMember(ctx, id, name, title, phone, email, notes); err != nil {
+			switch {
+			case errors.Is(err, store.ErrPhoneExists):
+				a.Render(w, r, "members_edit", "Edit member", echo("Another member already has that phone number."))
+			case errors.Is(err, store.ErrMemberNotFound):
+				http.NotFound(w, r)
+			default:
+				a.Render(w, r, "members_edit", "Edit member", echo(err.Error()))
+			}
+			return
+		}
+		http.Redirect(w, r,
+			fmt.Sprintf("/members/%d?ok=%s", id, url.QueryEscape("Member details updated.")),
+			http.StatusSeeOther)
+	}
+}
+
 // MembersView shows a single member: details, opt-in status, and message log.
 func MembersView(a *app.App) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -253,6 +342,17 @@ func salutation(name, title string, useTitles bool) string {
 		return strings.TrimSpace(title) + " " + lastName(name)
 	}
 	return firstName(name)
+}
+
+// displayPhone renders a stored E.164 number in a friendly form for pre-filling
+// the edit form: "+17065551234" → "(706) 555-1234". Non-US (or unexpected)
+// numbers are shown as-is. Either way NormalizePhone re-parses it on submit.
+func displayPhone(e164 string) string {
+	if len(e164) == 12 && strings.HasPrefix(e164, "+1") {
+		d := e164[2:]
+		return "(" + d[0:3] + ") " + d[3:6] + "-" + d[6:10]
+	}
+	return e164
 }
 
 func firstName(full string) string {

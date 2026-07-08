@@ -1,0 +1,61 @@
+{{define "members_edit"}}{{template "layout" .}}{{end}}
+{{define "body"}}
+<header class="page-header">
+  <p class="breadcrumb"><a href="/members/{{.MemberID}}">← Back to member</a></p>
+  <h1>Edit member</h1>
+  <p class="muted">
+    Update this member's details. Their opt-in status is not affected.
+  </p>
+</header>
+
+{{if .Error}}<div class="flash flash-error">{{.Error}}</div>{{end}}
+
+<form method="POST" action="/members/{{.MemberID}}/edit" class="form">
+  <div class="form-field">
+    <label for="name">Full name <span class="required">*</span></label>
+    <input id="name" name="name" type="text" required value="{{.FormName}}" autofocus>
+  </div>
+
+  {{if .UseTitles}}
+  <div class="form-field">
+    <label for="title">Rank / title <span class="muted">(optional — used in text messages)</span></label>
+    <input id="title" name="title" type="text" value="{{.FormTitle}}"
+           list="common-titles" autocomplete="off" placeholder="Commander">
+    <datalist id="common-titles">
+      {{range officerTitles}}<option value="{{.}}"></option>{{end}}
+    </datalist>
+    <p class="form-help">With a rank set, messages open with e.g.
+    “Hi Commander Hollis” instead of a first name. Can be switched off in
+    <a href="/settings">Settings</a>.</p>
+  </div>
+  {{end}}
+
+  <div class="form-field">
+    <label for="phone">Phone number <span class="required">*</span></label>
+    <input id="phone" name="phone" type="tel" required
+           placeholder="(706) 555-1234"
+           autocomplete="tel"
+           value="{{.FormPhone}}">
+    <p class="form-help">
+      Correcting a typo is fine — the member keeps their opt-in. If this is a
+      <em>different person's</em> number, delete this member and add the new one
+      instead, so they get their own opt-in text.
+    </p>
+  </div>
+
+  <div class="form-field">
+    <label for="email">Email <span class="muted">(optional)</span></label>
+    <input id="email" name="email" type="email" autocomplete="email" value="{{.FormEmail}}">
+  </div>
+
+  <div class="form-field">
+    <label for="notes">Notes <span class="muted">(optional, admin-only)</span></label>
+    <textarea id="notes" name="notes" rows="3">{{.FormNotes}}</textarea>
+  </div>
+
+  <div class="form-actions">
+    <a href="/members/{{.MemberID}}" class="btn btn-secondary">Cancel</a>
+    <button type="submit" class="btn btn-primary">Save changes</button>
+  </div>
+</form>
+{{end}}
