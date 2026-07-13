@@ -85,7 +85,7 @@ func New(d Deps) (*App, error) {
 // page then renders the final file's body (this shipped once; see
 // TestPagesRenderTheirOwnBody).
 var pageNames = []string{
-	"login", "dashboard", "members_list", "members_new", "members_edit", "member_view", "reminders",
+	"login", "subscribe", "dashboard", "members_list", "members_new", "members_edit", "member_view", "reminders",
 	"events_list", "events_form", "locations_list", "settings",
 	"content_hub", "content_info", "content_roster", "content_pages", "content_page",
 	"gallery_albums", "gallery_album",

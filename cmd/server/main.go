@@ -105,6 +105,10 @@ func main() {
 	mux.HandleFunc("POST /logout", handlers.Logout(a))
 	mux.HandleFunc("POST /webhooks/twilio", handlers.TwilioInbound(a))
 
+	// Public self-serve SMS opt-in (the documented A2P opt-in path).
+	mux.HandleFunc("GET /subscribe", handlers.SubscribeGet(a))
+	mux.HandleFunc("POST /subscribe", handlers.SubscribePost(a))
+
 	// Static files
 	mux.Handle("GET /static/", http.StripPrefix("/static/", a.StaticFS))
 

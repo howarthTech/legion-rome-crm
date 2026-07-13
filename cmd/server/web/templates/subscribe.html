@@ -1,0 +1,53 @@
+{{define "subscribe"}}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Text reminders · {{.OrgName}}</title>
+  <link rel="stylesheet" href="/static/css/admin.css">
+  <style>
+    body { background:var(--bg-alt,#f4f1e9); }
+    .optin-card { max-width:34rem; margin:2.5rem auto; background:#fff; border:1px solid var(--rule,#e3ddcf); border-radius:8px; padding:1.75rem 1.9rem; }
+    .optin-card h1 { margin:0 0 .2rem; color:var(--navy,#0a3161); font-size:1.25rem; }
+    .optin-card h2 { margin:.2rem 0 .8rem; }
+    .consent { display:flex; gap:.6rem; align-items:flex-start; margin:1.1rem 0; font-size:.9rem; line-height:1.5; }
+    .consent input { margin-top:.15rem; flex:0 0 auto; width:1.1rem; height:1.1rem; }
+    .hp { position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
+  </style>
+</head>
+<body>
+  <div class="optin-card">
+    <h1>{{.OrgName}}</h1>
+    {{if .Done}}
+      <h2>Almost done — check your phone</h2>
+      <p>Thanks{{if .FormName}}, {{.FormName}}{{end}}! We just sent a text{{if .MaskedPhone}} to the number {{.MaskedPhone}}{{end}}. <strong>Reply YES</strong> to that message to confirm and start receiving reminders.</p>
+      <p class="muted">You can reply STOP at any time to stop, or HELP for help. Message &amp; data rates may apply.</p>
+    {{else}}
+      <h2>Get meeting &amp; event reminders by text</h2>
+      <p>Sign up to receive occasional SMS reminders about {{.OrgName}} meetings and community events. This is entirely optional — it is not required to be a member, attend events, or use our website.</p>
+      {{if .Error}}<div class="flash flash-error">{{.Error}}</div>{{end}}
+      <form method="POST" action="/subscribe" class="form">
+        <div class="form-field">
+          <label for="name">Your name</label>
+          <input id="name" name="name" type="text" required value="{{.FormName}}" autocomplete="name">
+        </div>
+        <div class="form-field">
+          <label for="phone">Mobile number</label>
+          <input id="phone" name="phone" type="tel" required value="{{.FormPhone}}" autocomplete="tel" placeholder="(706) 555-1234">
+        </div>
+        {{/* Honeypot — hidden from people, tempting to bots. Leave it empty. */}}
+        <input class="hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <label class="consent">
+          <input type="checkbox" name="consent" value="on">
+          <span>I agree to receive recurring automated SMS event and meeting reminders from {{.OrgName}} at the mobile number I provided. Message frequency varies. Message &amp; data rates may apply. Reply STOP to cancel, HELP for help. Consent is not a condition of membership or any purchase. See our <a href="https://legionpostwebsites.com/privacy" target="_blank" rel="noopener">Privacy Policy</a> and <a href="https://legionpostwebsites.com/terms" target="_blank" rel="noopener">Terms &amp; Conditions</a>.</span>
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Sign up for text reminders</button>
+        </div>
+      </form>
+    {{end}}
+  </div>
+  <script src="/static/js/phone-format.js"></script>
+</body>
+</html>
+{{end}}
